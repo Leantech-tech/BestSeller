@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Administrativo - TechShop</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favion.jpg">
+    <link rel="icon" type="image/png" sizes="192x192" href="images/favion.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin-loja.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <script src="js/api-interceptor.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <div class="logo-brand-text">
+                    <span class="logo-fallback-titulo">TechShop</span>
+                    <span class="logo-fallback-sub"></span>
+                </div>
+            </a>
+            <div class="busca-container">
+                <i class="fas fa-search busca-icone"></i>
+                <input type="text" class="busca-input" placeholder="Buscar produtos..." id="buscaAdmin">
+            </div>
+            <div class="header-acoes">
+                <a href="index.html" class="btn-carrinho">
+                    <i class="fas fa-store"></i> Loja
+                </a>
+                <button class="btn-carrinho" onclick="fazerLogout()" style="background:#ef4444; color:white;">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Menu Admin -->
+    <nav class="admin-menu">
+        <div class="admin-menu-container">
+            <a href="admin.html" class="active"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="admin-categorias.html"><i class="fas fa-tags"></i> Categorias</a>
+            <a href="admin-produtos.html"><i class="fas fa-box"></i> Produtos</a>
+            <a href="admin-empresas.html"><i class="fas fa-building"></i> Empresas</a>
+            <a href="admin-cadastros.html"><i class="fas fa-warehouse"></i> Cadastros</a>
+            <a href="admin-configuracoes.html"><i class="fas fa-cogs"></i> Configurações</a>
+            <a href="admin-usuarios.html"><i class="fas fa-users"></i> Pessoas</a>
+            <a href="admin-banners.html"><i class="fas fa-image"></i> Banners</a>
+            <a href="admin-pedidos.html"><i class="fas fa-shopping-cart"></i> Pedidos</a>
+        </div>
+    </nav>
+
+    <!-- Conteúdo -->
+    <div class="admin-content-loja">
+        <h1>Dashboard</h1>
+
+        <div class="admin-cards-loja">
+            <div class="admin-card-loja">
+                <div class="admin-card-loja-icon blue"><i class="fas fa-tags"></i></div>
+                <h3 id="statCategorias">0</h3>
+                <p>Categorias</p>
+            </div>
+            <div class="admin-card-loja">
+                <div class="admin-card-loja-icon green"><i class="fas fa-box"></i></div>
+                <h3 id="statProdutos">0</h3>
+                <p>Produtos</p>
+            </div>
+            <div class="admin-card-loja">
+                <div class="admin-card-loja-icon orange"><i class="fas fa-star"></i></div>
+                <h3 id="statDestaque">0</h3>
+                <p>Em Destaque</p>
+            </div>
+            <div class="admin-card-loja">
+                <div class="admin-card-loja-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                <h3 id="statSemEstoque">0</h3>
+                <p>Sem Estoque</p>
+            </div>
+            <div class="admin-card-loja">
+                <div class="admin-card-loja-icon purple"><i class="fas fa-users"></i></div>
+                <h3 id="statClientes">0</h3>
+                <p>Clientes</p>
+            </div>
+            <div class="admin-card-loja">
+                <div class="admin-card-loja-icon teal"><i class="fas fa-shopping-cart"></i></div>
+                <h3 id="statPedidos">0</h3>
+                <p>Pedidos</p>
+            </div>
+        </div>
+
+        <div class="admin-table-loja-container">
+            <div class="admin-table-loja-header">
+                <h2><i class="fas fa-bolt"></i> Ações Rápidas</h2>
+            </div>
+            <div style="padding: 2rem;">
+                <div class="admin-acoes-grid">
+                    <a href="admin-categorias.html" class="btn btn-primary"><i class="fas fa-plus"></i> Nova Categoria</a>
+                    <a href="admin-produtos.html" class="btn btn-success"><i class="fas fa-plus"></i> Novo Produto</a>
+                    <a href="admin-empresas.html"><i class="fas fa-building"></i> Empresas</a>
+            <a href="admin-cadastros.html" class="btn btn-secondary"><i class="fas fa-list"></i> Marcas</a>
+                    <a href="admin-usuarios.html" class="btn btn-secondary"><i class="fas fa-list"></i> Clientes</a>
+                    <a href="admin-pedidos.html" class="btn btn-secondary"><i class="fas fa-list"></i> Pedidos</a>
+                    <a href="admin-banners.html" class="btn btn-secondary"><i class="fas fa-list"></i> Banners</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo-container">
+                    <h2 class="footer-logo-titulo">TechShop</h2>
+                    <span class="footer-logo-sub"></span>
+                </div>
+                <div class="footer-info-empresa">
+                    <h4>TechShop E-commerce</h4>
+                    <span class="footer-info-item"></span>
+                    <span class="footer-info-item"></span>
+                    <span class="footer-info-item"></span>
+                    <span class="footer-info-item"></span>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>SITE</h4>
+                <a href="index.html"><i class="fas fa-store"></i> Loja</a>
+                <a href="admin.html"><i class="fas fa-cog"></i> Admin</a>
+            </div>
+            <div class="footer-col">
+                <h4>HORÁRIOS</h4>
+                <div class="footer-horarios">
+                    <p>Segunda à Sexta-feira: 07:30 às 17:00</p>
+                    <p>Sábado: 07:30 às 12:00</p>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>ATENDIMENTO</h4>
+                <a href="https://wa.me/5512974070653" class="atendimento-link">
+                    <div class="atendimento-icone">📞</div>
+                    <span class="atendimento-numero">(12) 97407-0653</span>
+                </a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 TechShop. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/login.js"></script>
+    <script>verificarLogin();</script>
+    <script src="js/admin.js"></script>
+    <script>
+        document.getElementById('buscaAdmin').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const termo = this.value.trim();
+                if (termo) window.location.href = 'index.html?busca=' + encodeURIComponent(termo);
+            }
+        });
+    </script>
+    <script src="js/empresa.js"></script>
+</body>
+</html>

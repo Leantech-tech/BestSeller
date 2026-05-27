@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pessoas - Painel Administrativo</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favion.jpg">
+    <link rel="icon" type="image/png" sizes="192x192" href="images/favion.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin-loja.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <script src="js/api-interceptor.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <div class="logo-brand-text">
+                    <span class="logo-fallback-titulo">TechShop</span>
+                    <span class="logo-fallback-sub"></span>
+                </div>
+            </a>
+            <div class="busca-container">
+                <i class="fas fa-search busca-icone"></i>
+                <input type="text" class="busca-input" placeholder="Buscar produtos..." id="buscaAdmin">
+            </div>
+            <div class="header-acoes">
+                <a href="index.html" class="btn-carrinho"><i class="fas fa-store"></i> Loja</a>
+            </div>
+        </div>
+    </header>
+
+    <nav class="admin-menu">
+        <div class="admin-menu-container">
+            <a href="admin.html"><i class="fas fa-home"></i> Dashboard</a>
+            <a href="admin-categorias.html"><i class="fas fa-tags"></i> Categorias</a>
+            <a href="admin-produtos.html"><i class="fas fa-box"></i> Produtos</a>
+            <a href="admin-empresas.html"><i class="fas fa-building"></i> Empresas</a>
+            <a href="admin-cadastros.html"><i class="fas fa-warehouse"></i> Cadastros</a>
+            <a href="admin-configuracoes.html"><i class="fas fa-cogs"></i> Configurações</a>
+            <a href="admin-usuarios.html" class="active"><i class="fas fa-users"></i> Pessoas</a>
+            <a href="admin-banners.html"><i class="fas fa-image"></i> Banners</a>
+            <a href="admin-pedidos.html"><i class="fas fa-shopping-cart"></i> Pedidos</a>
+        </div>
+    </nav>
+
+    <div class="admin-content-loja">
+        <h1>Pessoas</h1>
+        <div class="tabs" id="tabsPessoas">
+            <button type="button" class="tab-btn active" data-tab="tab-usuarios"><i class="fas fa-user-shield"></i> Usuários Admin</button>
+            <button type="button" class="tab-btn" data-tab="tab-vendedores"><i class="fas fa-user-tie"></i> Vendedores</button>
+            <button type="button" class="tab-btn" data-tab="tab-clientes"><i class="fas fa-users"></i> Clientes</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-usuarios">
+            <div class="admin-table-loja-container">
+                <div class="admin-table-loja-header">
+                    <h2><i class="fas fa-user-shield"></i> Usuários Administrativos</h2>
+                    <div class="admin-table-loja-toolbar">
+                        <div class="admin-search-loja"><i class="fas fa-search"></i><input type="text" id="searchUsuario" placeholder="Buscar..."></div>
+                        <button class="btn btn-primary" onclick="abrirModalGenerico('usuario')"><i class="fas fa-plus"></i> Novo</button>
+                    </div>
+                </div>
+                <div style="overflow-x:auto;"><table class="admin-table-loja" id="tabelaUsuarios"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Perfil</th><th>Status</th><th style="text-align:right;">Ações</th></tr></thead><tbody></tbody></table></div>
+                <div class="admin-pagination-loja" id="pagUsuarios"><span id="infoUsuarios">0</span><div class="pagination-buttons" id="btnsUsuarios"></div></div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-vendedores">
+            <div class="admin-table-loja-container">
+                <div class="admin-table-loja-header">
+                    <h2><i class="fas fa-user-tie"></i> Vendedores</h2>
+                    <div class="admin-table-loja-toolbar">
+                        <div class="admin-search-loja"><i class="fas fa-search"></i><input type="text" id="searchVendedor" placeholder="Buscar..."></div>
+                        <button class="btn btn-primary" onclick="abrirModalGenerico('vendedor')"><i class="fas fa-plus"></i> Novo</button>
+                    </div>
+                </div>
+                <div style="overflow-x:auto;"><table class="admin-table-loja" id="tabelaVendedores"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Perfil</th><th>Comissão %</th><th>Status</th><th style="text-align:right;">Ações</th></tr></thead><tbody></tbody></table></div>
+                <div class="admin-pagination-loja" id="pagVendedores"><span id="infoVendedores">0</span><div class="pagination-buttons" id="btnsVendedores"></div></div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab-clientes">
+            <div class="admin-table-loja-container">
+                <div class="admin-table-loja-header">
+                    <h2><i class="fas fa-users"></i> Clientes</h2>
+                    <div class="admin-table-loja-toolbar">
+                        <div class="admin-search-loja"><i class="fas fa-search"></i><input type="text" id="searchCliente" placeholder="Buscar..."></div>
+                        <button class="btn btn-primary" onclick="abrirModalGenerico('cliente')"><i class="fas fa-plus"></i> Novo</button>
+                    </div>
+                </div>
+                <div style="overflow-x:auto;"><table class="admin-table-loja" id="tabelaClientes"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>CPF/CNPJ</th><th>Telefone</th><th>Status</th><th style="text-align:right;">Ações</th></tr></thead><tbody></tbody></table></div>
+                <div class="admin-pagination-loja" id="pagClientes"><span id="infoClientes">0</span><div class="pagination-buttons" id="btnsClientes"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <div class="footer-logo-container"><h2 class="footer-logo-titulo">TechShop</h2><span class="footer-logo-sub"></span></div>
+                <div class="footer-info-empresa">
+                    <h4>TechShop E-commerce</h4>
+                    <span class="footer-info-item"></span>
+                    <span class="footer-info-item"> </span>
+                    <span class="footer-info-item"></span>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h4>SITE</h4>
+                <a href="index.html"><i class="fas fa-store"></i> Loja</a>
+                <a href="admin.html"><i class="fas fa-cog"></i> Admin</a>
+            </div>
+            <div class="footer-col">
+                <h4>HORÁRIOS</h4>
+                <div class="footer-horarios"><p>Segunda à Sexta-feira: 07:30 às 17:00</p><p>Sábado: 07:30 às 12:00</p></div>
+            </div>
+            <div class="footer-col">
+                <h4>ATENDIMENTO</h4>
+                <a href="https://wa.me/5512974070653" class="atendimento-link"><div class="atendimento-icone">📞</div><span class="atendimento-numero">(12) 97407-0653</span></a>
+            </div>
+        </div>
+        <div class="footer-bottom"><p>© 2025 TechShop. Todos os direitos reservados.</p></div>
+    </footer>
+
+    <div class="modal-overlay" id="modalGenerico">
+        <div class="modal">
+            <div class="modal-header"><h3 id="modalGenericoTitulo">Cadastro</h3><button class="modal-close" onclick="fecharModal('modalGenerico')">&times;</button></div>
+            <div class="modal-body" id="modalGenericoBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="fecharModal('modalGenerico')">Cancelar</button>
+                <button class="btn btn-success" id="btnSalvarGenerico"><i class="fas fa-save"></i> Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalConfirmar">
+        <div class="modal modal-confirm">
+            <div class="modal-body"><i class="fas fa-trash-alt"></i><h4>Confirmar Exclusão</h4><p>Tem certeza?</p></div>
+            <div class="modal-footer" style="justify-content:center;">
+                <button class="btn btn-secondary" onclick="fecharModal('modalConfirmar')">Cancelar</button>
+                <button class="btn btn-danger" id="btnConfirmarExclusao"><i class="fas fa-trash"></i> Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+    <script>
+        document.getElementById('buscaAdmin').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') { const termo = this.value.trim(); if (termo) window.location.href = 'index.html?busca=' + encodeURIComponent(termo); }
+        });
+    </script>
+    <script src="js/mascaras.js"></script>
+    <script src="js/admin-usuarios.js?v=2"></script>
+    <script src="js/empresa.js"></script>
+</body>
+</html>

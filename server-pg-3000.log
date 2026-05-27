@@ -1,0 +1,5 @@
+◇ injected env (5) from .env // tip: ⌘ enable debugging { debug: true }
+Servidor rodando em http://localhost:3000
+Painel admin: http://localhost:3000/admin.html
+Loja: http://localhost:3000/index.html
+Erro S3 (usando fallback local): Timeout S3

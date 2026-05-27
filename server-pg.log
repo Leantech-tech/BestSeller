@@ -1,0 +1,4 @@
+◇ injected env (6) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+Servidor rodando em http://localhost:3003
+Painel admin: http://localhost:3003/admin.html
+Loja: http://localhost:3003/index.html

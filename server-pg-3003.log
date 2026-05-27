@@ -1,0 +1,4 @@
+◇ injected env (6) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Servidor rodando em http://localhost:3003
+Painel admin: http://localhost:3003/admin.html
+Loja: http://localhost:3003/index.html
