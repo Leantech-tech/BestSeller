@@ -1,6 +1,0 @@
-◇ injected env (6) from .env // tip: ⌘ suppress logs { quiet: true }
-(node:552) ExperimentalWarning: SQLite is an experimental feature and might change at any time
-(Use `node --trace-warnings ...` to show where the warning was created)
-Servidor rodando em http://localhost:3003
-Painel admin: http://localhost:3003/admin.html
-Loja: http://localhost:3003/index.html

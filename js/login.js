@@ -19,6 +19,12 @@ function formatarData(data) {
 async function fazerLogin(event) {
     event.preventDefault();
 
+    // Limpar localStorage anterior para evitar conflito entre logins
+    localStorage.removeItem('araca_admin_logado');
+    localStorage.removeItem('araca_admin_login_data');
+    localStorage.removeItem('araca_empresa_logada');
+    localStorage.removeItem('araca_admin_usuario');
+
     const email = document.getElementById('email').value.trim().toLowerCase();
     const senha = document.getElementById('senha').value.trim();
     const erroEl = document.getElementById('login-erro');

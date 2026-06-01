@@ -52,6 +52,13 @@ class Carrinho {
         return this.itens.reduce((total, item) => total + item.quantidade, 0);
     }
 
+    limpar() {
+        this.itens = [];
+        localStorage.removeItem('carrinho');
+        this.atualizarUI();
+        this.renderizarPagina();
+    }
+
     atualizarUI() {
         const contador = document.querySelector('.carrinho-contador');
         if (contador) {
@@ -306,22 +313,58 @@ function selecionarFormaPagamento(el) {
     if (btn) btn.disabled = false;
 }
 
-function enviarPedidoWhatsApp() {
+async function enviarPedidoWhatsApp() {
     if (!formaPagamentoSelecionada || carrinho.itens.length === 0) return;
 
-    const numero = '5512988997924';
+    try {
+        // Buscar primeiro cliente da empresa
+        const resClientes = await fetch('/api/clientes');
+        const clientes = await resClientes.json();
+        const clienteId = clientes.length > 0 ? clientes[0].id : null;
 
-    let mensagem = '*Olá! Gostaria de finalizar minha compra:*\n\n';
-    mensagem += '*Produtos:*\n';
-    carrinho.itens.forEach(item => {
-        mensagem += `• ${item.nome}\n  ${item.quantidade}x - ${carrinho.formatarPreco(item.preco * item.quantidade)}\n`;
-    });
-    mensagem += `\n*Total:* ${carrinho.formatarPreco(carrinho.getTotal())}\n`;
-    mensagem += `\n*Forma de Pagamento:* ${formaPagamentoSelecionada.descricao}\n`;
+        // Montar itens do pedido
+        const itens = carrinho.itens.map(item => ({
+            produto_id: item.id,
+            nome: item.nome,
+            quantidade: item.quantidade,
+            preco_unitario: item.preco,
+            total: item.preco * item.quantidade
+        }));
 
-    const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
-    window.open(url, '_blank');
-    fecharModalCheckout();
+        // Criar pedido no backend
+        const resPedido = await fetch('/api/pedidos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                cliente_id: clienteId,
+                forma_pagamento_id: formaPagamentoSelecionada.id,
+                itens: itens
+            })
+        });
+
+        if (!resPedido.ok) {
+            throw new Error('Erro ao criar pedido');
+        }
+
+        const numero = '5512988997924';
+
+        let mensagem = '*Olá! Gostaria de finalizar minha compra:*\n\n';
+        mensagem += '*Produtos:*\n';
+        carrinho.itens.forEach(item => {
+            mensagem += `• ${item.nome}\n  ${item.quantidade}x - ${carrinho.formatarPreco(item.preco * item.quantidade)}\n`;
+        });
+        mensagem += `\n*Total:* ${carrinho.formatarPreco(carrinho.getTotal())}\n`;
+        mensagem += `\n*Forma de Pagamento:* ${formaPagamentoSelecionada.descricao}\n`;
+
+        const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
+        window.open(url, '_blank');
+
+        carrinho.limpar();
+        fecharModalCheckout();
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao finalizar pedido. Tente novamente.');
+    }
 }
 
 // Vincular botões "Finalizar Compra"

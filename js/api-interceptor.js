@@ -26,6 +26,7 @@
             } else {
                 options.headers['x-admin-perfil'] = 'suporte';
             }
+            console.log('[API Interceptor] Enviando como SUPORTE:', url);
         } else {
             const empresaRaw = localStorage.getItem('araca_empresa_logada');
             const empresaId = empresaRaw ? JSON.parse(empresaRaw).id || '1' : '1';
@@ -35,6 +36,7 @@
             } else {
                 options.headers['x-empresa-id'] = String(empresaId);
             }
+            console.log('[API Interceptor] Enviando empresa_id:', empresaId, '- URL:', url);
         }
         
         return originalFetch(url, options);

@@ -19,9 +19,23 @@ app.use((req, res, next) => {
     if (isSuporte(req)) {
         return empresaStore.run(null, next);
     }
+    // Só exige header em rotas da API; arquivos estáticos (html, css, js, imagens) passam livre
+    if (!req.path.startsWith('/api/')) {
+        return empresaStore.run(1, next);
+    }
+    // Login e health são públicos
+    if (req.path === '/api/login' || req.path === '/api/health') {
+        return empresaStore.run(1, next);
+    }
     const raw = req.headers['x-empresa-id'];
-    const id = raw ? parseInt(raw, 10) : 1;
-    empresaStore.run(isNaN(id) ? 1 : id, next);
+    if (!raw) {
+        return res.status(403).json({ error: 'Header x-empresa-id obrigatório' });
+    }
+    const id = parseInt(raw, 10);
+    if (isNaN(id)) {
+        return res.status(400).json({ error: 'Header x-empresa-id inválido' });
+    }
+    empresaStore.run(id, next);
 });
 
 function isSuporte(req) {
@@ -64,7 +78,11 @@ app.post('/api/upload', upload.single('imagem'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Nenhuma imagem enviada' });
     try {
         const ext = path.extname(req.file.originalname) || '.jpg';
-        const empresaId = req.body.empresa_id || req.query.empresa_id || '1';
+        let empresaId = req.body.empresa_id || req.query.empresa_id;
+        if (!isSuporte(req)) {
+            empresaId = getEmpresaId(req);
+        }
+        if (!empresaId) empresaId = '1';
         const tipo = req.body.tipo || req.query.tipo || 'produtos';
         const prefixo = `empresa-${empresaId}/${tipo}/`;
         const key = prefixo + Date.now() + '-' + Math.round(Math.random() * 1e9) + ext;
@@ -941,13 +959,14 @@ app.delete('/api/condicoes-pagamento/:id', async (req, res) => {
 app.get('/api/status-pedido', async (req, res) => {
     try {
         let sql;
+        const params = [];
         if (isSuporte(req)) {
             sql = 'SELECT s.*, e.nome_fantasia as empresa_nome FROM status_pedido_cfg s LEFT JOIN empresas e ON e.id = s.empresa_id ORDER BY s.ordem';
         } else {
             sql = 'SELECT * FROM status_pedido_cfg WHERE empresa_id = $1 ORDER BY ordem';
             params.push(getEmpresaId(req));
         }
-        const r = await query(sql);
+        const r = await query(sql, params);
         res.json(r.rows);
     } catch (err) { sendError(res, err); }
 });
@@ -960,21 +979,23 @@ app.get('/api/status-pedido/:id', async (req, res) => {
 });
 app.post('/api/status-pedido', async (req, res) => {
     try {
+        const empresaId = getEmpresaId(req);
         const { codigo, descricao, cor, icone, finaliza, cancela, envia_rp, ordem, ativo } = req.body;
         const r = await query(
             `INSERT INTO status_pedido_cfg (empresa_id, codigo, descricao, cor, icone, finaliza, cancela, envia_rp, ordem, ativo)
-             VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-            [codigo, descricao, cor || '#666666', icone || null, finaliza === true, cancela === true, envia_rp === true, ordem || 0, ativo !== false]);
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+            [empresaId, codigo, descricao, cor || '#666666', icone || null, finaliza === true, cancela === true, envia_rp === true, ordem || 0, ativo !== false]);
         res.status(201).json(r.rows[0]);
     } catch (err) { sendError(res, err); }
 });
 app.put('/api/status-pedido/:id', async (req, res) => {
     try {
+        const empresaId = getEmpresaId(req);
         const { codigo, descricao, cor, icone, finaliza, cancela, envia_rp, ordem, ativo } = req.body;
         const r = await query(
             `UPDATE status_pedido_cfg SET codigo=$1, descricao=$2, cor=$3, icone=$4, finaliza=$5, cancela=$6, envia_rp=$7, ordem=$8, ativo=$9
-             WHERE id=$10 AND empresa_id=1 RETURNING *`,
-            [codigo, descricao, cor || '#666666', icone || null, finaliza === true, cancela === true, envia_rp === true, ordem || 0, ativo !== false, req.params.id]);
+             WHERE id=$10 AND empresa_id=$11 RETURNING *`,
+            [codigo, descricao, cor || '#666666', icone || null, finaliza === true, cancela === true, envia_rp === true, ordem || 0, ativo !== false, req.params.id, empresaId]);
         if (!r.rows.length) return res.status(404).json({ error: 'Status não encontrado' });
         res.json(r.rows[0]);
     } catch (err) { sendError(res, err); }
@@ -1058,7 +1079,11 @@ app.put('/api/usuarios-admin/:id', async (req, res) => {
 });
 app.delete('/api/usuarios-admin/:id', async (req, res) => {
     try {
-        await query('DELETE FROM empresa_usuarios WHERE id = $1 AND empresa_id = $2', [req.params.id, getEmpresaId(req)]);
+        if (isSuporte(req)) {
+            await query('DELETE FROM empresa_usuarios WHERE id = $1', [req.params.id]);
+        } else {
+            await query('DELETE FROM empresa_usuarios WHERE id = $1 AND empresa_id = $2', [req.params.id, getEmpresaId(req)]);
+        }
         res.json({ success: true });
     } catch (err) { sendError(res, err); }
 });
@@ -1175,13 +1200,14 @@ app.delete('/api/clientes/:id', async (req, res) => {
 app.get('/api/banners', async (req, res) => {
     try {
         let sql;
+        const params = [];
         if (isSuporte(req)) {
             sql = 'SELECT b.*, e.nome_fantasia as empresa_nome FROM banners b LEFT JOIN empresas e ON e.id = b.empresa_id ORDER BY b.ordem';
         } else {
             sql = 'SELECT * FROM banners WHERE empresa_id = $1 ORDER BY ordem';
             params.push(getEmpresaId(req));
         }
-        const r = await query(sql);
+        const r = await query(sql, params);
         res.json(r.rows);
     } catch (err) { sendError(res, err); }
 });
@@ -1194,21 +1220,23 @@ app.get('/api/banners/:id', async (req, res) => {
 });
 app.post('/api/banners', async (req, res) => {
     try {
+        const empresaId = getEmpresaId(req);
         const { imagem, imagem_mobile, titulo, subtitulo, link, ordem, ativo, data_inicio, data_fim } = req.body;
         const r = await query(
             `INSERT INTO banners (empresa_id, imagem, imagem_mobile, titulo, subtitulo, link, ordem, ativo, data_inicio, data_fim, created_at)
-             VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) RETURNING *`,
-            [imagem, imagem_mobile || null, titulo, subtitulo || null, link || null, ordem || 0, ativo !== false, data_inicio || null, data_fim || null]);
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW()) RETURNING *`,
+            [empresaId, imagem, imagem_mobile || null, titulo, subtitulo || null, link || null, ordem || 0, ativo !== false, data_inicio || null, data_fim || null]);
         res.status(201).json(r.rows[0]);
     } catch (err) { sendError(res, err); }
 });
 app.put('/api/banners/:id', async (req, res) => {
     try {
+        const empresaId = getEmpresaId(req);
         const { imagem, imagem_mobile, titulo, subtitulo, link, ordem, ativo, data_inicio, data_fim } = req.body;
         const r = await query(
             `UPDATE banners SET imagem=$1, imagem_mobile=$2, titulo=$3, subtitulo=$4, link=$5, ordem=$6, ativo=$7, data_inicio=$8, data_fim=$9
-             WHERE id=$10 AND empresa_id=1 RETURNING *`,
-            [imagem, imagem_mobile || null, titulo, subtitulo || null, link || null, ordem || 0, ativo !== false, data_inicio || null, data_fim || null, req.params.id]);
+             WHERE id=$10 AND empresa_id=$11 RETURNING *`,
+            [imagem, imagem_mobile || null, titulo, subtitulo || null, link || null, ordem || 0, ativo !== false, data_inicio || null, data_fim || null, req.params.id, empresaId]);
         if (!r.rows.length) return res.status(404).json({ error: 'Banner não encontrado' });
         res.json(r.rows[0]);
     } catch (err) { sendError(res, err); }
@@ -1280,6 +1308,74 @@ app.put('/api/pedidos/:id/status', async (req, res) => {
             [status, obs_interna || null, req.params.id, getEmpresaId(req)]);
         if (!r.rows.length) return res.status(404).json({ error: 'Pedido não encontrado' });
         res.json(r.rows[0]);
+    } catch (err) { sendError(res, err); }
+});
+app.post('/api/pedidos', async (req, res) => {
+    try {
+        const empresaId = getEmpresaId(req);
+        const { cliente_id, forma_pagamento_id, obs, itens } = req.body;
+        if (!itens || !Array.isArray(itens) || itens.length === 0) {
+            return res.status(400).json({ error: 'Carrinho vazio' });
+        }
+        let clienteId = cliente_id;
+        let enderecoId = null;
+        if (!clienteId) {
+            const rCliente = await query('SELECT id FROM clientes WHERE empresa_id = $1 LIMIT 1', [empresaId]);
+            if (rCliente.rows.length) {
+                clienteId = rCliente.rows[0].id;
+            } else {
+                const rNovo = await query(
+                    `INSERT INTO clientes (empresa_id, tipo_pessoa, nome, email, ativo, created_at, updated_at)
+                     VALUES ($1, $2, $3, $4, $5, NOW(), NOW()) RETURNING *`,
+                    [empresaId, 'F', 'Cliente Final', 'cliente@local.com', 1]
+                );
+                clienteId = rNovo.rows[0].id;
+            }
+        }
+        // Buscar endereco padrao do cliente ou criar um
+        const rEnd = await query('SELECT id FROM enderecos WHERE cliente_id = $1 AND empresa_id = $2 ORDER BY padrao DESC LIMIT 1', [clienteId, empresaId]);
+        if (rEnd.rows.length) {
+            enderecoId = rEnd.rows[0].id;
+        } else {
+            const rNovoEnd = await query(
+                `INSERT INTO enderecos (empresa_id, cliente_id, apelido, cep, logradouro, numero, bairro, cidade, estado, padrao, created_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, true, NOW()) RETURNING *`,
+                [empresaId, clienteId, 'Principal', '00000-000', 'Não informado', '0', 'Não informado', 'Não informado', 'SP']
+            );
+            enderecoId = rNovoEnd.rows[0].id;
+        }
+        const numero = 'WEB-' + Math.floor(Date.now() / 1000);
+        const subtotal = itens.reduce((s, item) => s + (item.quantidade * item.preco_unitario), 0);
+        const total = subtotal;
+        const rPedido = await query(
+            `INSERT INTO pedidos (empresa_id, numero, cliente_id, endereco_id, forma_pagamento_id, status, obs_cliente, subtotal_produtos, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *`,
+            [empresaId, numero, clienteId, enderecoId, forma_pagamento_id || null, 'pendente', obs || null, subtotal]
+        );
+        const pedido = rPedido.rows[0];
+        for (let i = 0; i < itens.length; i++) {
+            const item = itens[i];
+            // Buscar dados do produto para preencher codigo e unidade
+            let produtoCodigo = '';
+            let produtoUnidade = 'UN';
+            if (item.produto_id) {
+                const rProd = await query('SELECT codigo_interno, unidade_id FROM produtos WHERE id = $1 AND empresa_id = $2', [item.produto_id, empresaId]);
+                if (rProd.rows.length) {
+                    produtoCodigo = rProd.rows[0].codigo_interno || '';
+                    if (rProd.rows[0].unidade_id) {
+                        const rUnid = await query('SELECT codigo FROM unidades_medida WHERE id = $1', [rProd.rows[0].unidade_id]);
+                        if (rUnid.rows.length) produtoUnidade = rUnid.rows[0].codigo || 'UN';
+                    }
+                }
+            }
+            const itemSubtotal = (item.quantidade || 0) * (item.preco_unitario || 0);
+            await query(
+                `INSERT INTO itens_pedido (empresa_id, pedido_id, sequencia, produto_id, produto_codigo, produto_nome, produto_unidade, quantidade, preco_venda, created_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())`,
+                [empresaId, pedido.id, i + 1, item.produto_id || null, produtoCodigo, item.nome, produtoUnidade, item.quantidade, item.preco_unitario]
+            );
+        }
+        res.status(201).json(pedido);
     } catch (err) { sendError(res, err); }
 });
 app.delete('/api/pedidos/:id', async (req, res) => {
