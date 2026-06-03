@@ -1,0 +1,895 @@
+/* ============================================================
+   RESPONSIVO MOBILE - E-commerce TechShop
+   ============================================================ */
+
+/* ============ TABLET (até 1024px) ============ */
+@media (max-width: 1024px) {
+    .main-container {
+        grid-template-columns: 1fr;
+    }
+
+    .menu-lateral {
+        position: static;
+        display: flex;
+        overflow-x: auto;
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+
+    .menu-lateral h3 {
+        display: none;
+    }
+
+    .categoria-lista {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: nowrap;
+    }
+
+    .categoria-item {
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .categoria-link {
+        white-space: nowrap;
+        padding: 0.6rem 1rem;
+    }
+
+    .footer-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .footer-logo-titulo {
+        font-size: 3rem;
+    }
+
+    .carrossel {
+        height: 50vh;
+        min-height: 320px;
+    }
+
+    .produto-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .produto-galeria {
+        flex-direction: column-reverse;
+    }
+
+    .produto-miniaturas {
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .produto-imagem {
+        height: 400px;
+    }
+}
+
+/* ============ MOBILE (até 768px) ============ */
+@media (max-width: 768px) {
+    /* Header */
+    .header {
+        padding: 0 0.75rem;
+    }
+
+    .header-container {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 0.5rem 0;
+        gap: 0.5rem;
+        min-height: 60px;
+    }
+
+    .logo-fallback-titulo {
+        font-size: 1.6rem;
+    }
+
+    .logo-fallback-sub {
+        font-size: 0.65rem;
+    }
+
+    .logo-imagem {
+        height: 40px;
+    }
+
+    .busca-container {
+        order: 3;
+        max-width: 100%;
+        flex-basis: 100%;
+    }
+
+    .busca-input {
+        padding: 0.65rem 0.9rem 0.65rem 2.5rem;
+        font-size: 0.9rem;
+    }
+
+    .header-acoes {
+        gap: 0.5rem;
+    }
+
+    .btn-carrinho {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.85rem;
+        border-radius: 10px;
+    }
+
+    /* Carrossel */
+    .carrossel {
+        height: 35vh;
+        min-height: 200px;
+        max-height: 350px;
+    }
+
+    .carrossel-conteudo {
+        bottom: 40px;
+        left: 1rem;
+        right: 1rem;
+        max-width: none;
+    }
+
+    .carrossel-conteudo h2 {
+        font-size: 1.4rem;
+    }
+
+    .carrossel-conteudo p {
+        font-size: 0.9rem;
+    }
+
+    /* Layout Principal */
+    .main-container {
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .menu-lateral {
+        padding: 0.75rem;
+        border-radius: 12px;
+    }
+
+    .categoria-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+        border-radius: 8px;
+    }
+
+    /* Produtos Header */
+    .produtos-header {
+        margin-bottom: 1rem;
+        gap: 0.75rem;
+    }
+
+    .produtos-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .produtos-filtros {
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .filtros-label {
+        font-size: 0.8rem;
+    }
+
+    .filtro-checkbox {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    /* Grid de Produtos */
+    .produtos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    /* Card de Produto */
+    .card-imagem {
+        height: 140px;
+    }
+
+    .card-info {
+        padding: 0.75rem;
+    }
+
+    .card-categoria {
+        font-size: 0.65rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .card-nome {
+        font-size: 0.85rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .card-preco {
+        font-size: 1.05rem;
+    }
+
+    .card-preco-antigo {
+        font-size: 0.75rem;
+    }
+
+    .card-parcela {
+        font-size: 0.7rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-btn {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+        border-radius: 8px;
+    }
+
+    .card-badge-desconto {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+    }
+
+    /* Página de Produto */
+    .produto-detalhes {
+        margin: 0.75rem auto;
+        padding: 0 0.75rem;
+    }
+
+    .produto-voltar {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .produto-grid {
+        padding: 1rem;
+        gap: 1.5rem;
+        border-radius: 14px;
+    }
+
+    .produto-imagem {
+        height: 280px;
+    }
+
+    .miniatura {
+        width: 48px;
+        height: 48px;
+    }
+
+    .produto-col-direita h1 {
+        font-size: 1.2rem;
+    }
+
+    .produto-codigo {
+        font-size: 0.8rem;
+    }
+
+    .produto-preco {
+        font-size: 1.5rem;
+    }
+
+    .produto-acoes {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .quantidade-control {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-comprar,
+    .btn-carrinho-add {
+        width: 100%;
+        height: 44px;
+    }
+
+    .produto-frete {
+        padding: 0.75rem;
+    }
+
+    .frete-input-group {
+        flex-wrap: wrap;
+    }
+
+    .frete-input {
+        min-width: 120px;
+    }
+
+    .produto-descricao {
+        font-size: 0.85rem;
+        margin-top: 1rem;
+    }
+
+    .produto-ficha-tecnica {
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    /* Recomendados */
+    .recomendados {
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .recomendados-titulo {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .recomendados-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .recomendados-grid .card-produto .card-imagem {
+        height: 120px;
+    }
+
+    .recomendados-grid .card-produto .card-info {
+        padding: 0.6rem;
+    }
+
+    .recomendados-grid .card-produto .card-nome {
+        font-size: 0.8rem;
+    }
+
+    .recomendados-grid .card-produto .card-preco {
+        font-size: 0.95rem;
+    }
+
+    /* Carrinho Drawer */
+    .carrinho-drawer {
+        width: 100%;
+        right: -100%;
+    }
+
+    .carrinho-header {
+        padding: 1rem;
+    }
+
+    .carrinho-header h3 {
+        font-size: 1rem;
+    }
+
+    .carrinho-itens {
+        padding: 0.75rem;
+    }
+
+    .carrinho-item {
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+
+    .carrinho-item-imagem {
+        width: 55px;
+        height: 55px;
+        border-radius: 8px;
+    }
+
+    .carrinho-item-nome {
+        font-size: 0.8rem;
+    }
+
+    .carrinho-item-preco {
+        font-size: 0.85rem;
+    }
+
+    .carrinho-footer {
+        padding: 1rem;
+    }
+
+    .carrinho-total-valor {
+        font-size: 1.2rem;
+    }
+
+    /* Página de Carrinho */
+    .carrinho-pagina {
+        padding: 0 0.75rem;
+        margin: 1rem auto;
+    }
+
+    .carrinho-pagina-container h1 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+    }
+
+    .carrinho-pagina-conteudo {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .carrinho-pagina-item {
+        grid-template-columns: 60px 1fr auto;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-radius: 10px;
+    }
+
+    .carrinho-pagina-item-imagem {
+        width: 60px;
+        height: 60px;
+    }
+
+    .carrinho-pagina-item-nome {
+        font-size: 0.9rem;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+    }
+
+    .carrinho-pagina-item-preco-unit {
+        font-size: 0.8rem;
+    }
+
+    .carrinho-pagina-item-subtotal {
+        grid-column: 2;
+        text-align: left;
+        font-size: 1rem;
+    }
+
+    .carrinho-pagina-item .carrinho-item-remover {
+        grid-column: 3;
+        grid-row: 1 / span 2;
+    }
+
+    .carrinho-pagina-resumo {
+        position: static;
+        padding: 1rem;
+    }
+
+    .carrinho-pagina-vazio {
+        padding: 2rem 1rem;
+    }
+
+    /* Footer */
+    .footer {
+        padding: 2.5rem 1rem 1.5rem;
+        margin-top: 2rem;
+    }
+
+    .footer-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        text-align: center;
+    }
+
+    .footer-logo-titulo {
+        font-size: 2.2rem;
+    }
+
+    .footer-logo-sub {
+        font-size: 1rem;
+    }
+
+    .footer-col h4 {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .footer-col a {
+        justify-content: center;
+        line-height: 2;
+    }
+
+    .footer-info-empresa {
+        margin-top: 1rem;
+    }
+
+    .social-links {
+        justify-content: center;
+    }
+
+    .atendimento-link {
+        justify-content: center;
+        max-width: 280px;
+        margin: 0.5rem auto 0;
+    }
+
+    .footer-bottom {
+        text-align: center;
+        margin-top: 2rem;
+        font-size: 0.8rem;
+    }
+
+    /* Toast */
+    .toast {
+        left: 1rem;
+        right: 1rem;
+        transform: translateX(0) translateY(100px);
+        padding: 0.875rem 1rem;
+        font-size: 0.85rem;
+        max-width: none;
+        width: auto;
+    }
+
+    .toast.visivel {
+        transform: translateX(0) translateY(0);
+    }
+
+    /* ============================================================
+       ADMIN MOBILE
+       ============================================================ */
+
+    /* Admin Menu (barra de navegação do admin integrado) */
+    .admin-menu {
+        padding: 0 0.75rem;
+        top: auto;
+        position: relative;
+    }
+
+    .admin-menu a {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    .admin-menu a i {
+        font-size: 0.9rem;
+    }
+
+    /* Admin Content */
+    .admin-content-loja {
+        padding: 1rem;
+    }
+
+    .admin-content-loja h1 {
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .admin-cards-loja {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .admin-card-loja {
+        padding: 1rem;
+    }
+
+    .admin-card-loja-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .admin-card-loja h3 {
+        font-size: 1.25rem;
+    }
+
+    .admin-card-loja p {
+        font-size: 0.8rem;
+    }
+
+    .admin-acoes-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    /* Tabelas Admin */
+    .admin-table-loja-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table-loja {
+        min-width: 600px;
+    }
+
+    .admin-table-loja-header {
+        padding: 1rem;
+    }
+
+    .admin-table-loja th,
+    .admin-table-loja td {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.8rem;
+    }
+
+    .admin-table-loja-toolbar {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .admin-search-loja input {
+        width: 180px;
+        font-size: 0.85rem;
+    }
+
+    .admin-table-loja-actions {
+        flex-wrap: nowrap;
+    }
+
+    /* Botões Admin */
+    .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .btn-sm {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
+    .btn-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    /* Modais Admin */
+    .modal {
+        max-width: 95vw;
+        margin: 0.5rem;
+        max-height: 95vh;
+    }
+
+    .modal-header {
+        padding: 1rem;
+    }
+
+    .modal-header h3 {
+        font-size: 1rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 0.875rem 1rem;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+
+    /* Forms Admin */
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+    }
+
+    /* Admin Header busca */
+    .admin-header {
+        padding: 0.75rem 1rem;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .admin-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .admin-search input {
+        width: 200px;
+    }
+
+    /* Admin Sidebar (layout antigo) */
+    .admin-sidebar {
+        width: 260px;
+        transform: translateX(-100%);
+    }
+
+    .admin-sidebar.active {
+        transform: translateX(0);
+    }
+
+    .admin-main {
+        margin-left: 0;
+    }
+
+    .admin-content {
+        padding: 1rem;
+    }
+
+    /* Cards layout antigo */
+    .admin-cards {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    /* Tabelas layout antigo */
+    .admin-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table {
+        min-width: 600px;
+    }
+
+    /* Pagination */
+    .admin-pagination {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    /* Drawer Menu (já existente) */
+    .admin-drawer {
+        width: 280px;
+    }
+
+    .admin-drawer-header {
+        padding: 1rem 1.25rem;
+    }
+
+    .admin-drawer-menu li a {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9rem;
+    }
+
+    /* Toast container admin */
+    .toast-container {
+        top: auto;
+        bottom: 1rem;
+        right: 0.5rem;
+        left: 0.5rem;
+    }
+
+    .toast-container .toast {
+        min-width: auto;
+        width: 100%;
+    }
+
+    /* Scrollbar mais fino no mobile */
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    /* Seletor de ícones */
+    .btn-icon-item {
+        aspect-ratio: auto;
+        min-height: 44px;
+    }
+
+    /* Zoom de imagem desativado no mobile */
+    .produto-imagem-container {
+        cursor: default;
+    }
+
+    .produto-imagem-container.zoom-ativo .produto-imagem {
+        transform: none;
+    }
+
+    .produto-zoom-hint {
+        display: none;
+    }
+}
+
+/* ============ TELAS PEQUENAS (até 480px) ============ */
+@media (max-width: 480px) {
+    .produtos-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+
+    .card-imagem {
+        height: 120px;
+    }
+
+    .card-info {
+        padding: 0.6rem;
+    }
+
+    .card-nome {
+        font-size: 0.8rem;
+        -webkit-line-clamp: 2;
+    }
+
+    .card-preco {
+        font-size: 0.95rem;
+    }
+
+    .card-btn {
+        font-size: 0.75rem;
+        padding: 0.45rem;
+    }
+
+    .carrossel {
+        height: 30vh;
+        min-height: 180px;
+    }
+
+    .carrossel-conteudo h2 {
+        font-size: 1.1rem;
+    }
+
+    .carrossel-conteudo p {
+        font-size: 0.8rem;
+    }
+
+    .produto-imagem {
+        height: 220px;
+    }
+
+    .miniatura {
+        width: 40px;
+        height: 40px;
+    }
+
+    .produto-col-direita h1 {
+        font-size: 1rem;
+    }
+
+    .produto-preco {
+        font-size: 1.3rem;
+    }
+
+    .btn-comprar,
+    .btn-carrinho-add {
+        font-size: 0.8rem;
+        height: 42px;
+    }
+
+    .admin-cards-loja {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .admin-card-loja h3 {
+        font-size: 1.1rem;
+    }
+
+    .header-acoes a[href="#"] {
+        display: none;
+    }
+
+    .recomendados-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+
+    .recomendados-grid .card-produto .card-imagem {
+        height: 100px;
+    }
+}
+
+/* ============ TELAS MUITO PEQUENAS (até 360px) ============ */
+@media (max-width: 360px) {
+    .produtos-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-imagem {
+        height: 180px;
+    }
+
+    .admin-cards-loja {
+        grid-template-columns: 1fr;
+    }
+
+    .logo-fallback-titulo {
+        font-size: 1.3rem;
+    }
+
+    .logo-fallback-sub {
+        font-size: 0.6rem;
+    }
+
+    .btn-carrinho {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+    }
+
+    .carrinho-contador {
+        width: 18px;
+        height: 18px;
+        font-size: 0.6rem;
+        top: -6px;
+        right: -6px;
+    }
+}

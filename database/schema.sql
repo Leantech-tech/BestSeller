@@ -836,10 +836,10 @@ INSERT INTO empresas (
 ) VALUES (
     'araca-demo', 'Araca Materiais de Construcao e Logistica',
     'TechShop', '05.750.359/0001-08',
-    'contato@araca.com.br', '(12) 97407-0653',
+    'contato@araca.com.br', '(12) 98899-7924',
     '11611-630', 'Rua Inácio de Carvalho', '17', 'Varadouro',
     'São Sebastião', 'SP',
-    '#1a6fc4', 'ativo', 'Administrador', 'admin@araca.com.br', '(12) 97407-0653'
+    '#1a6fc4', 'ativo', 'Administrador', 'admin@araca.com.br', '(12) 98899-7924'
 ) RETURNING id;
 
 -- Guardar o ID da empresa para os próximos inserts

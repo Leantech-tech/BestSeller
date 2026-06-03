@@ -556,7 +556,7 @@ INSERT INTO empresas (id, slug, razao_social, nome_fantasia, email, telefone, wh
     cep, logradouro, numero, bairro, cidade, estado, cnpj,
     cor_primaria, cor_secundaria, status)
 VALUES (1, 'araca-demo', 'Araca Materiais de Construcao e Logistica', 'Araça Casa & Construção',
-    'contato@araca.com.br', '(12) 3456-7890', '(12) 97407-0653',
+    'contato@araca.com.br', '(12) 3456-7890', '(12) 98899-7924',
     '11611-630', 'Rua Inácio de Carvalho', '17', 'Varadouro', 'São Sebastião', 'SP', '05.750.359/0001-08',
     '#1a6fc4', '#f5f5f5', 'ativo');
 

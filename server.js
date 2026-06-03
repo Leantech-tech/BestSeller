@@ -11,6 +11,15 @@ const PORT = process.env.PORT || 3000;
 const { AsyncLocalStorage } = require('async_hooks');
 const empresaStore = new AsyncLocalStorage();
 
+const pool = new Pool({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    ssl: false
+});
+
 app.use(cors());
 app.use(express.json());
 
@@ -48,8 +57,17 @@ function getEmpresaId(req) {
     return isNaN(id) ? 1 : id;
 }
 
-app.get('/', (req, res) => {
-    res.redirect('/login.html');
+app.get('/', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT slug FROM empresas ORDER BY id ASC LIMIT 1');
+        if (result.rows.length > 0) {
+            res.redirect('/' + result.rows[0].slug);
+        } else {
+            res.redirect('/login.html');
+        }
+    } catch (e) {
+        res.redirect('/login.html');
+    }
 });
 
 app.use(express.static(path.join(__dirname)));
@@ -114,15 +132,6 @@ app.post('/api/upload', upload.single('imagem'), async (req, res) => {
     }
 });
 
-const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    ssl: false
-});
-
 // ============================================================
 // HELPERS
 // ============================================================
@@ -179,6 +188,22 @@ app.get('/api/health', async (req, res) => {
 // ============================================================
 // LOJA (endpoints públicos do e-commerce)
 // ============================================================
+
+// Buscar empresa por slug
+app.get('/api/loja/empresa-por-slug/:slug', async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT id, nome_fantasia, razao_social, logo_url, cor_primaria, cor_secundaria, slug FROM empresas WHERE slug = $1 LIMIT 1`,
+            [req.params.slug]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Empresa não encontrada' });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        sendError(res, err);
+    }
+});
 
 // Categorias da loja (apenas ativas)
 app.get('/api/loja/categorias', async (req, res) => {
@@ -1116,19 +1141,21 @@ app.get('/api/vendedores/:id', async (req, res) => {
 });
 app.post('/api/vendedores', async (req, res) => {
     try {
-        const { nome, email, senha_hash, perfil, comissao_pct, ativo, codigo_erp } = req.body;
+        const { empresa_id, nome, email, senha_hash, perfil, comissao_pct, ativo, codigo_erp } = req.body;
+        const eid = isSuporte(req) ? (empresa_id || 1) : getEmpresaId(req);
         const r = await query(
             'INSERT INTO usuarios (empresa_id, codigo_erp, nome, email, senha_hash, perfil, comissao_pct, ativo, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *',
-            [getEmpresaId(req), codigo_erp || null, nome, email, senha_hash || null, perfil || 'vendedor', comissao_pct || 0, ativo === true || ativo === 'true']);
+            [eid, codigo_erp || null, nome, email, senha_hash || null, perfil || 'vendedor', comissao_pct || 0, ativo === true || ativo === 'true']);
         res.status(201).json(r.rows[0]);
     } catch (err) { sendError(res, err); }
 });
 app.put('/api/vendedores/:id', async (req, res) => {
     try {
-        const { nome, email, senha_hash, perfil, comissao_pct, ativo, codigo_erp } = req.body;
+        const { empresa_id, nome, email, senha_hash, perfil, comissao_pct, ativo, codigo_erp } = req.body;
+        const eid = isSuporte(req) ? (empresa_id || 1) : getEmpresaId(req);
         const r = await query(
             'UPDATE usuarios SET codigo_erp=$1, nome=$2, email=$3, senha_hash=$4, perfil=$5, comissao_pct=$6, ativo=$7, updated_at=NOW() WHERE id=$8 AND empresa_id=$9 RETURNING *',
-            [codigo_erp || null, nome, email, senha_hash || null, perfil || 'vendedor', comissao_pct || 0, ativo === true || ativo === 'true', req.params.id, getEmpresaId(req)]);
+            [codigo_erp || null, nome, email, senha_hash || null, perfil || 'vendedor', comissao_pct || 0, ativo === true || ativo === 'true', req.params.id, eid]);
         if (!r.rows.length) return res.status(404).json({ error: 'Vendedor não encontrado' });
         res.json(r.rows[0]);
     } catch (err) { sendError(res, err); }
@@ -1168,21 +1195,23 @@ app.get('/api/clientes/:id', async (req, res) => {
 });
 app.post('/api/clientes', async (req, res) => {
     try {
-        const { tipo_pessoa, nome, nome_fantasia, cpf_cnpj, rg_ie, email, telefone, celular, codigo_erp, ativo } = req.body;
+        const { empresa_id, tipo_pessoa, nome, nome_fantasia, cpf_cnpj, rg_ie, email, telefone, celular, codigo_erp, ativo } = req.body;
+        const eid = isSuporte(req) ? (empresa_id || 1) : getEmpresaId(req);
         const r = await query(
             `INSERT INTO clientes (empresa_id, tipo_pessoa, nome, nome_fantasia, cpf_cnpj, rg_ie, email, telefone, celular, codigo_erp, ativo, created_at, updated_at)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW()) RETURNING *`,
-            [getEmpresaId(req), tipo_pessoa || 'F', nome, nome_fantasia || null, cpf_cnpj || null, rg_ie || null, email, telefone || null, celular || null, codigo_erp || null, ativo === true || ativo === 'true']);
+            [eid, tipo_pessoa || 'F', nome, nome_fantasia || null, cpf_cnpj || null, rg_ie || null, email, telefone || null, celular || null, codigo_erp || null, ativo === true || ativo === 'true']);
         res.status(201).json(r.rows[0]);
     } catch (err) { sendError(res, err); }
 });
 app.put('/api/clientes/:id', async (req, res) => {
     try {
-        const { tipo_pessoa, nome, nome_fantasia, cpf_cnpj, rg_ie, email, telefone, celular, codigo_erp, ativo } = req.body;
+        const { empresa_id, tipo_pessoa, nome, nome_fantasia, cpf_cnpj, rg_ie, email, telefone, celular, codigo_erp, ativo } = req.body;
+        const eid = isSuporte(req) ? (empresa_id || 1) : getEmpresaId(req);
         const r = await query(
             `UPDATE clientes SET tipo_pessoa=$1, nome=$2, nome_fantasia=$3, cpf_cnpj=$4, rg_ie=$5, email=$6, telefone=$7, celular=$8, codigo_erp=$9, ativo=$10, updated_at=NOW()
              WHERE id=$11 AND empresa_id=$12 RETURNING *`,
-            [tipo_pessoa || 'F', nome, nome_fantasia || null, cpf_cnpj || null, rg_ie || null, email, telefone || null, celular || null, codigo_erp || null, ativo === true || ativo === 'true', req.params.id, getEmpresaId(req)]);
+            [tipo_pessoa || 'F', nome, nome_fantasia || null, cpf_cnpj || null, rg_ie || null, email, telefone || null, celular || null, codigo_erp || null, ativo === true || ativo === 'true', req.params.id, eid]);
         if (!r.rows.length) return res.status(404).json({ error: 'Cliente não encontrado' });
         res.json(r.rows[0]);
     } catch (err) { sendError(res, err); }
@@ -1518,6 +1547,26 @@ app.get('/api/cep/:cep', async (req, res) => {
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: 'Erro ao consultar CEP' });
+    }
+});
+
+// ============================================================
+// REDIRECIONAMENTO DE EMPRESA (SLUG)
+// ============================================================
+app.get('/:slug', async (req, res, next) => {
+    const slug = req.params.slug;
+    if (slug.includes('.') || slug.startsWith('api')) {
+        return next();
+    }
+    try {
+        const check = await pool.query('SELECT id FROM empresas WHERE slug = $1 LIMIT 1', [slug]);
+        if (check.rows.length > 0) {
+            res.sendFile(path.join(__dirname, 'index.html'));
+        } else {
+            next();
+        }
+    } catch (err) {
+        next(err);
     }
 });
 

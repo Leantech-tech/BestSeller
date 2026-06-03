@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendas - TechShop</title>
+    <link rel="stylesheet" href="css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Premium styling for sales screen */
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--slate-900);
+            color: var(--slate-100);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 4rem;
+            gap: 2rem;
+        }
+        .header {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--teal), var(--verde));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .sales-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.5rem;
+            width: 90%;
+            max-width: 1200px;
+        }
+        .card-produto {
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-produto:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .card-imagem {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        .card-info {
+            padding: 1rem;
+        }
+        .card-nome {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .card-preco {
+            color: var(--teal-dark);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Tela de Vendas</div>
+    <div class="produtos-grid" id="sales-grid">
+        <!-- Produtos serão inseridos via JavaScript -->
+    </div>
+    <script src="js/api-interceptor.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+        // Reutiliza a lógica de renderização de produtos do main.js
+        // Assume que `produtosData` já foi carregado por `carregarDadosLoja()`
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof renderizarProdutos === 'function') {
+                renderizarProdutos();
+            }
+        });
+    </script>
+</body>
+</html>

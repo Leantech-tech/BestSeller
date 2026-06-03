@@ -1,10 +1,38 @@
 const API_BASE = '';
+
+// Helper: returns the current logged‑in company id (from localStorage) or null
+function getCompanyId(){
+    const stored = localStorage.getItem('araca_empresa_logada');
+    if(!stored) return null;
+    try{ const empresa = JSON.parse(stored); return empresa.id ? String(empresa.id) : null; }
+    catch{ return null; }
+}
+
+// Initialize company based on URL slug
+function initCompanyFromSlug() {
+    // No slug routing needed – the company is loaded during login
+    // This stub keeps the call safe without performing any fetch
+    const stored = localStorage.getItem('araca_empresa_logada');
+    if (stored) {
+        const empresa = JSON.parse(stored);
+        window.__companySlug = empresa.slug || '';
+    }
+}
+
+
 let carrosselIndex = 0;
 let carrosselInterval;
 let categoriaAtiva = 'todos';
 let categoriasData = [];
 let produtosData = [];
-let filtrosCarrossel = new Set();
+let filtrosCarrossel = (function() {
+    try {
+        const saved = localStorage.getItem('araca_filtros_carrossel');
+        return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch (e) {
+        return new Set();
+    }
+})();
 let slidesAtuais = [];
 
 function iniciarCarrossel() {
@@ -28,8 +56,10 @@ function irParaSlide(index) {
 
 async function carregarDadosLoja() {
     try {
-        // Buscar categorias
-        const resCat = await fetch(`${API_BASE}/api/loja/categorias`);
+        // Buscar categorias com header da empresa
+        const companyId = getCompanyId();
+        const headers = companyId ? {'x-empresa-id': companyId} : {};
+        const resCat = await fetch(`${API_BASE}/api/loja/categorias`, {headers});
         if (resCat.ok) categoriasData = await resCat.json();
     } catch (e) {
         console.warn('Falha ao carregar categorias da API, usando fallback', e);
@@ -40,8 +70,11 @@ async function carregarDadosLoja() {
         // Buscar produtos
         const params = new URLSearchParams(window.location.search);
         const busca = params.get('busca');
+        const companyId = getCompanyId();
+        const headers = companyId ? {'x-empresa-id': companyId} : {};
         const url = `${API_BASE}/api/loja/produtos${busca ? '?busca=' + encodeURIComponent(busca) : ''}`;
-        const resProd = await fetch(url);
+        const resProd = await fetch(url, {headers});
+
         if (resProd.ok) produtosData = await resProd.json();
     } catch (e) {
         console.warn('Falha ao carregar produtos da API, usando fallback', e);
@@ -79,6 +112,11 @@ function toggleFiltro(checkbox) {
         filtrosCarrossel.add(valor);
     } else {
         filtrosCarrossel.delete(valor);
+    }
+    try {
+        localStorage.setItem('araca_filtros_carrossel', JSON.stringify([...filtrosCarrossel]));
+    } catch (e) {
+        console.warn('Erro ao salvar filtros no localStorage:', e);
     }
     atualizarCarrossel();
 }
@@ -208,10 +246,20 @@ function verProduto(id) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // If no company logged, redirect to login
+    if (!localStorage.getItem('araca_empresa_logada')) {
+        window.location.href = 'login.html';
+        return;
+    }
+    initCompanyFromSlug();
     initCarrossel();
     carregarDadosLoja();
 });
 
 function initCarrossel() {
+    // Restaurar estado visual dos checkboxes
+    document.querySelectorAll('.produtos-filtros input[type="checkbox"]').forEach(cb => {
+        cb.checked = filtrosCarrossel.has(cb.value);
+    });
     atualizarCarrossel();
 }

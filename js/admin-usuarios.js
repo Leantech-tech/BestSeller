@@ -95,7 +95,14 @@ async function carregar(entidade) {
 
 function renderizar(entidade) {
     const cfg = configs[entidade];
-    const tbody = $(`tabela${cfg.tituloLista}`).querySelector('tbody');
+    const table = $(`tabela${cfg.tituloLista}`);
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+
+    if (thead) {
+        thead.innerHTML = `<tr>${cfg.colunas.map(c => `<th>${c.label}</th>`).join('')}<th style="text-align:right;">Ações</th></tr>`;
+    }
+
     const total = dados[entidade]?.length || 0;
     const inicio = (paginas[entidade] - 1) * porPagina;
     const fim = inicio + porPagina;
@@ -171,6 +178,7 @@ $('btnSalvarGenerico').addEventListener('click', async () => {
         const el = $(`gen_${f.name}`);
         if (f.type === 'checkbox') dadosForm[f.name] = !!el.checked;
         else if (f.type === 'number') dadosForm[f.name] = parseFloat(el.value) || 0;
+        else if (f.name === 'empresa_id') dadosForm[f.name] = parseInt(el.value, 10) || null;
         else dadosForm[f.name] = el.value.trim() || null;
         if (f.required && (dadosForm[f.name] === null || dadosForm[f.name] === '')) valido = false;
     });
@@ -205,10 +213,43 @@ $('btnConfirmarExclusao').addEventListener('click', async () => {
 function abrirModal(id) { $(id).classList.add('active'); }
 function fecharModal(id) { $(id).classList.remove('active'); }
 
+let empresasOptions = [];
+
+async function carregarEmpresasParaSelect() {
+    if (!isSuporte) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/empresas`);
+        if (res.ok) {
+            const list = await res.json();
+            empresasOptions = list.map(e => ({ v: e.id, t: e.nome_fantasia || e.razao_social }));
+            
+            // Adicionar campo empresa_id nas configurações de usuario, vendedor, cliente
+            ['usuario', 'vendedor', 'cliente'].forEach(ent => {
+                const cfg = configs[ent];
+                if (!cfg.campos.find(f => f.name === 'empresa_id')) {
+                    cfg.campos.unshift({ name: 'empresa_id', label: 'Empresa', type: 'select', options: empresasOptions, required: true });
+                }
+                if (!cfg.colunas.find(c => c.key === 'empresa_nome')) {
+                    cfg.colunas.splice(1, 0, { key: 'empresa_nome', label: 'Empresa' });
+                }
+            });
+        }
+    } catch (err) {
+        console.error('Erro ao carregar empresas para select:', err);
+    }
+}
+
 ['usuario', 'vendedor', 'cliente'].forEach(ent => {
     const cfg = configs[ent];
     const input = $(`search${cfg.tituloLista.replace(/s$/, '')}`);
     if (input) input.addEventListener('input', () => { paginas[ent] = 1; carregar(ent); });
 });
 
-carregar('usuario'); carregar('vendedor'); carregar('cliente');
+(async () => {
+    if (isSuporte) {
+        await carregarEmpresasParaSelect();
+    }
+    carregar('usuario');
+    carregar('vendedor');
+    carregar('cliente');
+})();

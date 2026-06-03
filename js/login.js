@@ -24,6 +24,7 @@ async function fazerLogin(event) {
     localStorage.removeItem('araca_admin_login_data');
     localStorage.removeItem('araca_empresa_logada');
     localStorage.removeItem('araca_admin_usuario');
+    localStorage.removeItem('araca_filtros_carrossel');
 
     const email = document.getElementById('email').value.trim().toLowerCase();
     const senha = document.getElementById('senha').value.trim();
@@ -112,7 +113,7 @@ function loginBemSucedido() {
     localStorage.setItem('araca_admin_logado', 'true');
     localStorage.setItem('araca_admin_login_data', new Date().toISOString());
     const params = new URLSearchParams(window.location.search);
-    const redirect = params.get('redirect') || 'admin.html';
+    const redirect = params.get('redirect') || 'index.html';
     window.location.href = redirect;
 }
 
@@ -128,6 +129,7 @@ function fazerLogout() {
     localStorage.removeItem('araca_admin_login_data');
     localStorage.removeItem('araca_empresa_logada');
     localStorage.removeItem('araca_admin_usuario');
+    localStorage.removeItem('araca_filtros_carrossel');
     window.location.href = 'login.html';
 }
 
