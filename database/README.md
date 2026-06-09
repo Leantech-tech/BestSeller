@@ -1,4 +1,4 @@
-# TechShop - Schema SaaS (Multi-tenant)
+# BestSeller - Schema SaaS (Multi-tenant)
 
 ## Visão Geral
 

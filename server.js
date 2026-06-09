@@ -32,8 +32,8 @@ app.use((req, res, next) => {
     if (!req.path.startsWith('/api/')) {
         return empresaStore.run(1, next);
     }
-    // Login e health são públicos
-    if (req.path === '/api/login' || req.path === '/api/health') {
+    // Login, health e endpoints públicos da loja não exigem header
+    if (req.path === '/api/login' || req.path === '/api/health' || req.path.startsWith('/api/loja/')) {
         return empresaStore.run(1, next);
     }
     const raw = req.headers['x-empresa-id'];
@@ -55,6 +55,24 @@ function getEmpresaId(req) {
     const raw = req.headers['x-empresa-id'] || '1';
     const id = parseInt(raw, 10);
     return isNaN(id) ? 1 : id;
+}
+
+async function getTabelaPrecoPadrao(empresaId) {
+    let result = await query('SELECT id FROM tabelas_preco WHERE empresa_id = $1 AND padrao = true AND ativo = true LIMIT 1', [empresaId]);
+    if (result.rows.length > 0) return result.rows[0].id;
+    result = await query('SELECT id FROM tabelas_preco WHERE empresa_id = $1 AND ativo = true LIMIT 1', [empresaId]);
+    if (result.rows.length > 0) return result.rows[0].id;
+    result = await query('INSERT INTO tabelas_preco (empresa_id, descricao, padrao, markup, ativo) VALUES ($1, $2, true, 1.80, true) RETURNING id', [empresaId, 'Varejo']);
+    return result.rows[0].id;
+}
+
+async function getDepositoPadrao(empresaId) {
+    let result = await query('SELECT id FROM depositos WHERE empresa_id = $1 AND padrao = true AND ativo = true LIMIT 1', [empresaId]);
+    if (result.rows.length > 0) return result.rows[0].id;
+    result = await query('SELECT id FROM depositos WHERE empresa_id = $1 AND ativo = true LIMIT 1', [empresaId]);
+    if (result.rows.length > 0) return result.rows[0].id;
+    result = await query('INSERT INTO depositos (empresa_id, descricao, padrao, ativo) VALUES ($1, $2, true, true) RETURNING id', [empresaId, 'Principal']);
+    return result.rows[0].id;
 }
 
 app.get('/', async (req, res) => {
@@ -397,22 +415,20 @@ app.get('/api/produtos', async (req, res) => {
         let idx = 1;
         if (isSuporte(req)) {
             sql = `SELECT p.*, c.nome as categoria_nome, e.nome_fantasia as empresa_nome,
-                   COALESCE(pp.preco, 0) as preco, pp.preco_promocional as preco_antigo,
-                   COALESCE(pe.saldo_fisico, 0) as estoque
+                   COALESCE((SELECT preco FROM produto_precos WHERE produto_id = p.id AND empresa_id = p.empresa_id AND ativo = true LIMIT 1), 0) as preco,
+                   (SELECT preco_promocional FROM produto_precos WHERE produto_id = p.id AND empresa_id = p.empresa_id AND ativo = true LIMIT 1) as preco_antigo,
+                   COALESCE((SELECT saldo_fisico FROM produto_estoque WHERE produto_id = p.id AND empresa_id = p.empresa_id LIMIT 1), 0) as estoque
                    FROM produtos p
                    LEFT JOIN categorias c ON c.id = p.categoria_id
                    LEFT JOIN empresas e ON e.id = p.empresa_id
-                   LEFT JOIN produto_precos pp ON pp.produto_id = p.id AND pp.empresa_id = p.empresa_id AND pp.ativo = true
-                   LEFT JOIN produto_estoque pe ON pe.produto_id = p.id AND pe.empresa_id = p.empresa_id
                    WHERE 1=1`;
         } else {
             sql = `SELECT p.*, c.nome as categoria_nome,
-                   COALESCE(pp.preco, 0) as preco, pp.preco_promocional as preco_antigo,
-                   COALESCE(pe.saldo_fisico, 0) as estoque
+                   COALESCE((SELECT preco FROM produto_precos WHERE produto_id = p.id AND empresa_id = p.empresa_id AND ativo = true LIMIT 1), 0) as preco,
+                   (SELECT preco_promocional FROM produto_precos WHERE produto_id = p.id AND empresa_id = p.empresa_id AND ativo = true LIMIT 1) as preco_antigo,
+                   COALESCE((SELECT saldo_fisico FROM produto_estoque WHERE produto_id = p.id AND empresa_id = p.empresa_id LIMIT 1), 0) as estoque
                    FROM produtos p
                    LEFT JOIN categorias c ON c.id = p.categoria_id
-                   LEFT JOIN produto_precos pp ON pp.produto_id = p.id AND pp.empresa_id = p.empresa_id AND pp.ativo = true
-                   LEFT JOIN produto_estoque pe ON pe.produto_id = p.id AND pe.empresa_id = p.empresa_id
                    WHERE p.empresa_id = $1`;
             params.push(getEmpresaId(req));
             idx++;
@@ -429,11 +445,10 @@ app.get('/api/produtos/:id', async (req, res) => {
     try {
         const result = await query(
             `SELECT p.*,
-             COALESCE(pp.preco, 0) as preco, pp.preco_promocional as preco_antigo,
-             COALESCE(pe.saldo_fisico, 0) as estoque
+             COALESCE((SELECT preco FROM produto_precos WHERE produto_id = p.id AND empresa_id = p.empresa_id AND ativo = true LIMIT 1), 0) as preco,
+             (SELECT preco_promocional FROM produto_precos WHERE produto_id = p.id AND empresa_id = p.empresa_id AND ativo = true LIMIT 1) as preco_antigo,
+             COALESCE((SELECT saldo_fisico FROM produto_estoque WHERE produto_id = p.id AND empresa_id = p.empresa_id LIMIT 1), 0) as estoque
              FROM produtos p
-             LEFT JOIN produto_precos pp ON pp.produto_id = p.id AND pp.empresa_id = p.empresa_id AND pp.ativo = true
-             LEFT JOIN produto_estoque pe ON pe.produto_id = p.id AND pe.empresa_id = p.empresa_id
              WHERE p.id = $1 AND p.empresa_id = $2`,
             [req.params.id, getEmpresaId(req)]
         );
@@ -445,16 +460,24 @@ app.get('/api/produtos/:id', async (req, res) => {
 
 app.post('/api/produtos', async (req, res) => {
     try {
-        const { codigo_interno, nome, nome_reduzido, descricao, descricao_curta, descricao_tecnica, categoria_id, unidade_id,
+        let { codigo_interno, nome, nome_reduzido, descricao, descricao_curta, descricao_tecnica, categoria_id, unidade_id,
             peso_bruto, altura, largura, comprimento, ncm, preco, preco_antigo, estoque, imagem, garantia, destaque, lancamento, mais_vendido, ativo } = req.body;
         const empresaId = getEmpresaId(req);
+
+        // Normalizar código interno
+        if (codigo_interno) {
+            codigo_interno = codigo_interno.toString().trim();
+        }
+
         const urlAmigavel = nome ? '/produto/' + nome.toLowerCase().replace(/\s+/g, '-') : null;
 
         // Verificar duplicidade de codigo_interno
         if (codigo_interno) {
-            const checkCod = await query('SELECT 1 FROM produtos WHERE codigo_interno = $1 AND empresa_id = $2 LIMIT 1', [codigo_interno, empresaId]);
+            const checkCod = await query('SELECT nome, ativo FROM produtos WHERE LOWER(TRIM(codigo_interno)) = LOWER($1) AND empresa_id = $2 LIMIT 1', [codigo_interno, empresaId]);
             if (checkCod.rows.length > 0) {
-                return res.status(409).json({ error: 'Já existe um produto com este código interno nesta empresa.' });
+                const existente = checkCod.rows[0];
+                const status = existente.ativo ? 'Ativo' : 'Inativo';
+                return res.status(409).json({ error: `Já existe um produto com este código interno nesta empresa: "${existente.nome}" (Status: ${status}).` });
             }
         }
 
@@ -479,12 +502,14 @@ app.post('/api/produtos', async (req, res) => {
                 urlAmigavel, imagemGerada, garantia || null]
         );
         const produto = result.rows[0];
+        const tabelaId = await getTabelaPrecoPadrao(empresaId);
+        const depositoId = await getDepositoPadrao(empresaId);
         await query(`INSERT INTO produto_precos (empresa_id, produto_id, tabela_id, preco, preco_promocional, ativo, updated_at)
-             VALUES ($1, $2, 1, $3, $4, true, NOW()) ON CONFLICT (empresa_id, produto_id, tabela_id) DO UPDATE SET preco=$3, preco_promocional=$4, updated_at=NOW()`,
-            [empresaId, produto.id, preco || 0, preco_antigo || null]);
+             VALUES ($1, $2, $3, $4, $5, true, NOW()) ON CONFLICT (empresa_id, produto_id, tabela_id) DO UPDATE SET preco=$4, preco_promocional=$5, updated_at=NOW()`,
+            [empresaId, produto.id, tabelaId, preco || 0, preco_antigo || null]);
         await query(`INSERT INTO produto_estoque (empresa_id, produto_id, deposito_id, saldo_fisico, saldo_reservado, updated_at)
-             VALUES ($1, $2, 1, $3, 0, NOW()) ON CONFLICT (empresa_id, produto_id, deposito_id) DO UPDATE SET saldo_fisico=$3, updated_at=NOW()`,
-            [empresaId, produto.id, estoque || 0]);
+             VALUES ($1, $2, $3, $4, 0, NOW()) ON CONFLICT (empresa_id, produto_id, deposito_id) DO UPDATE SET saldo_fisico=$4, updated_at=NOW()`,
+            [empresaId, produto.id, depositoId, estoque || 0]);
         // Salvar imagens adicionais
         const { imagens } = req.body;
         if (Array.isArray(imagens) && imagens.length > 0) {
@@ -502,16 +527,24 @@ app.post('/api/produtos', async (req, res) => {
 
 app.put('/api/produtos/:id', async (req, res) => {
     try {
-        const { codigo_interno, nome, nome_reduzido, descricao, descricao_curta, descricao_tecnica, categoria_id, unidade_id,
+        let { codigo_interno, nome, nome_reduzido, descricao, descricao_curta, descricao_tecnica, categoria_id, unidade_id,
             peso_bruto, altura, largura, comprimento, ncm, preco, preco_antigo, estoque, imagem, garantia, destaque, lancamento, mais_vendido, ativo } = req.body;
         const empresaId = getEmpresaId(req);
+
+        // Normalizar código interno
+        if (codigo_interno) {
+            codigo_interno = codigo_interno.toString().trim();
+        }
+
         const urlAmigavel = nome ? '/produto/' + nome.toLowerCase().replace(/\s+/g, '-') : null;
 
         // Verificar duplicidade de codigo_interno
         if (codigo_interno) {
-            const checkCod = await query('SELECT 1 FROM produtos WHERE codigo_interno = $1 AND empresa_id = $2 AND id != $3 LIMIT 1', [codigo_interno, empresaId, req.params.id]);
+            const checkCod = await query('SELECT nome, ativo FROM produtos WHERE LOWER(TRIM(codigo_interno)) = LOWER($1) AND empresa_id = $2 AND id != $3 LIMIT 1', [codigo_interno, empresaId, req.params.id]);
             if (checkCod.rows.length > 0) {
-                return res.status(409).json({ error: 'Já existe um produto com este código interno nesta empresa.' });
+                const existente = checkCod.rows[0];
+                const status = existente.ativo ? 'Ativo' : 'Inativo';
+                return res.status(409).json({ error: `Já existe um produto com este código interno nesta empresa: "${existente.nome}" (Status: ${status}).` });
             }
         }
 
@@ -537,12 +570,14 @@ app.put('/api/produtos/:id', async (req, res) => {
         );
         if (result.rows.length === 0) return res.status(404).json({ error: 'Produto não encontrado' });
         const produto = result.rows[0];
+        const tabelaId = await getTabelaPrecoPadrao(empresaId);
+        const depositoId = await getDepositoPadrao(empresaId);
         await query(`INSERT INTO produto_precos (empresa_id, produto_id, tabela_id, preco, preco_promocional, ativo, updated_at)
-             VALUES ($1, $2, 1, $3, $4, true, NOW()) ON CONFLICT (empresa_id, produto_id, tabela_id) DO UPDATE SET preco=$3, preco_promocional=$4, updated_at=NOW()`,
-            [empresaId, produto.id, preco || 0, preco_antigo || null]);
+             VALUES ($1, $2, $3, $4, $5, true, NOW()) ON CONFLICT (empresa_id, produto_id, tabela_id) DO UPDATE SET preco=$4, preco_promocional=$5, updated_at=NOW()`,
+            [empresaId, produto.id, tabelaId, preco || 0, preco_antigo || null]);
         await query(`INSERT INTO produto_estoque (empresa_id, produto_id, deposito_id, saldo_fisico, saldo_reservado, updated_at)
-             VALUES ($1, $2, 1, $3, 0, NOW()) ON CONFLICT (empresa_id, produto_id, deposito_id) DO UPDATE SET saldo_fisico=$3, updated_at=NOW()`,
-            [empresaId, produto.id, estoque || 0]);
+             VALUES ($1, $2, $3, $4, 0, NOW()) ON CONFLICT (empresa_id, produto_id, deposito_id) DO UPDATE SET saldo_fisico=$4, updated_at=NOW()`,
+            [empresaId, produto.id, depositoId, estoque || 0]);
         // Atualizar imagens
         const { imagens } = req.body;
         if (Array.isArray(imagens)) {
@@ -782,16 +817,18 @@ app.delete('/api/depositos/:id', async (req, res) => {
 app.get('/api/unidades-medida', async (req, res) => {
     try {
         const { search } = req.query;
-        let sql = 'SELECT * FROM unidades_medida';
-        const params = [];
-        if (search) { sql += ' WHERE codigo ILIKE $1 OR descricao ILIKE $1'; params.push(`%${search}%`); }
+        const empresaId = getEmpresaId(req);
+        let sql = 'SELECT * FROM unidades_medida WHERE empresa_id = $1';
+        const params = [empresaId];
+        if (search) { sql += ' AND (codigo ILIKE $2 OR descricao ILIKE $2)'; params.push(`%${search}%`); }
         sql += ' ORDER BY codigo';
         res.json((await query(sql, params)).rows);
     } catch (err) { sendError(res, err); }
 });
 app.get('/api/unidades-medida/:id', async (req, res) => {
     try {
-        const r = await query('SELECT * FROM unidades_medida WHERE id = $1', [req.params.id]);
+        const empresaId = getEmpresaId(req);
+        const r = await query('SELECT * FROM unidades_medida WHERE id = $1 AND empresa_id = $2', [req.params.id, empresaId]);
         if (!r.rows.length) return res.status(404).json({ error: 'Unidade não encontrada' });
         res.json(r.rows[0]);
     } catch (err) { sendError(res, err); }
@@ -799,25 +836,28 @@ app.get('/api/unidades-medida/:id', async (req, res) => {
 app.post('/api/unidades-medida', async (req, res) => {
     try {
         const { codigo, descricao, permite_fracao, ativo } = req.body;
+        const empresaId = getEmpresaId(req);
         const r = await query(
-            'INSERT INTO unidades_medida (codigo, descricao, permite_fracao, ativo, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING *',
-            [codigo, descricao, permite_fracao !== false, ativo !== false]);
+            'INSERT INTO unidades_medida (empresa_id, codigo, descricao, permite_fracao, ativo, created_at) VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *',
+            [empresaId, codigo, descricao, permite_fracao !== false, ativo !== false]);
         res.status(201).json(r.rows[0]);
     } catch (err) { sendError(res, err); }
 });
 app.put('/api/unidades-medida/:id', async (req, res) => {
     try {
         const { codigo, descricao, permite_fracao, ativo } = req.body;
+        const empresaId = getEmpresaId(req);
         const r = await query(
-            'UPDATE unidades_medida SET codigo=$1, descricao=$2, permite_fracao=$3, ativo=$4 WHERE id=$5 RETURNING *',
-            [codigo, descricao, permite_fracao !== false, ativo !== false, req.params.id]);
+            'UPDATE unidades_medida SET codigo=$1, descricao=$2, permite_fracao=$3, ativo=$4 WHERE id=$5 AND empresa_id=$6 RETURNING *',
+            [codigo, descricao, permite_fracao !== false, ativo !== false, req.params.id, empresaId]);
         if (!r.rows.length) return res.status(404).json({ error: 'Unidade não encontrada' });
         res.json(r.rows[0]);
     } catch (err) { sendError(res, err); }
 });
 app.delete('/api/unidades-medida/:id', async (req, res) => {
     try {
-        await query('DELETE FROM unidades_medida WHERE id = $1', [req.params.id]);
+        const empresaId = getEmpresaId(req);
+        await query('DELETE FROM unidades_medida WHERE id = $1 AND empresa_id = $2', [req.params.id, empresaId]);
         res.json({ success: true });
     } catch (err) { sendError(res, err); }
 });
@@ -1551,6 +1591,13 @@ app.get('/api/cep/:cep', async (req, res) => {
 });
 
 // ============================================================
+// LOGIN
+// ============================================================
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// ============================================================
 // REDIRECIONAMENTO DE EMPRESA (SLUG)
 // ============================================================
 app.get('/:slug', async (req, res, next) => {
@@ -1571,10 +1618,45 @@ app.get('/:slug', async (req, res, next) => {
 });
 
 // ============================================================
+// MIGRACOES
+// ============================================================
+async function runMigrations() {
+    try {
+        // Verificar se a coluna empresa_id existe em unidades_medida
+        const checkCol = await pool.query(`
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'unidades_medida' AND column_name = 'empresa_id'
+        `);
+        if (checkCol.rows.length === 0) {
+            console.log('[MIGRACAO] Adicionando empresa_id em unidades_medida...');
+            await pool.query('ALTER TABLE unidades_medida ADD COLUMN empresa_id INTEGER');
+            // Tentar adicionar foreign key
+            try {
+                await pool.query('ALTER TABLE unidades_medida ADD CONSTRAINT fk_unidades_medida_empresa FOREIGN KEY (empresa_id) REFERENCES empresas(id) ON DELETE CASCADE');
+            } catch (e) {
+                console.log('[MIGRACAO] Aviso: nao foi possivel adicionar FK:', e.message);
+            }
+            // Tentar criar constraint UNIQUE
+            try {
+                await pool.query('ALTER TABLE unidades_medida DROP CONSTRAINT IF EXISTS uq_unidades_medida_empresa_codigo');
+                await pool.query('ALTER TABLE unidades_medida ADD CONSTRAINT uq_unidades_medida_empresa_codigo UNIQUE (empresa_id, codigo)');
+            } catch (e) {
+                console.log('[MIGRACAO] Aviso: nao foi possivel criar constraint UNIQUE:', e.message);
+            }
+            console.log('[MIGRACAO] Concluido.');
+        }
+    } catch (err) {
+        console.error('[MIGRACAO] Erro:', err.message);
+    }
+}
+
+// ============================================================
 // INICIAR SERVIDOR
 // ============================================================
-app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
-    console.log(`Painel admin: http://localhost:${PORT}/admin.html`);
-    console.log(`Loja: http://localhost:${PORT}/index.html`);
+runMigrations().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Servidor rodando em http://localhost:${PORT}`);
+        console.log(`Painel admin: http://localhost:${PORT}/admin.html`);
+        console.log(`Loja: http://localhost:${PORT}/index.html`);
+    });
 });

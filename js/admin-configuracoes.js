@@ -1,4 +1,26 @@
 const API_BASE = '';
+
+function getAuthHeaders() {
+    const h = {'Content-Type': 'application/json'};
+    const isSuporte = localStorage.getItem('araca_admin_usuario') === 'suporte';
+    if (isSuporte) {
+        h['x-admin-perfil'] = 'suporte';
+    } else {
+        let empresaId = '1';
+        try {
+            const empresaRaw = localStorage.getItem('araca_empresa_logada');
+            if (empresaRaw) {
+                const empresa = JSON.parse(empresaRaw);
+                if (empresa && empresa.id) empresaId = String(empresa.id);
+            }
+        } catch (e) {
+            console.warn('[getAuthHeaders] Erro ao ler empresa do localStorage:', e.message);
+        }
+        h['x-empresa-id'] = empresaId;
+    }
+    return h;
+}
+
 const configs = {
     unidade: {
         api: 'unidades-medida', titulo: 'Unidade de Medida', tituloLista: 'Unidades',
@@ -111,7 +133,7 @@ async function carregar(entidade){
     const search = searchEl ? searchEl.value : '';
     try{
         const url = `${API_BASE}/api/${cfg.api}?${search?'search='+encodeURIComponent(search):''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { headers: getAuthHeaders() });
         if(!res.ok) throw new Error('Erro ao carregar');
         dados[entidade] = await res.json();
         paginas[entidade] = 1;
@@ -180,7 +202,7 @@ window.editar = async function(entidade, id){
     entidadeAtual = entidade;
     const cfg = configs[entidade];
     try{
-        const res = await fetch(`${API_BASE}/api/${cfg.api}/${id}`);
+        const res = await fetch(`${API_BASE}/api/${cfg.api}/${id}`, { headers: getAuthHeaders() });
         if(!res.ok) throw new Error('Erro');
         const item = await res.json();
         $('modalGenericoTitulo').innerHTML = `<i class="fas fa-edit"></i> Editar ${cfg.titulo}`;
@@ -212,7 +234,7 @@ $('btnSalvarGenerico').addEventListener('click', async ()=>{
     const id = $('genId').value;
     try{
         const url = `${API_BASE}/api/${cfg.api}${id?'/'+id:''}`;
-        const res = await fetch(url, { method: id?'PUT':'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(dadosForm) });
+        const res = await fetch(url, { method: id?'PUT':'POST', headers: getAuthHeaders(), body: JSON.stringify(dadosForm) });
         const json = await res.json();
         if(!res.ok) throw new Error(json.error||'Erro ao salvar');
         toast(id?'Atualizado!':'Criado!');
@@ -229,7 +251,7 @@ window.confirmarExclusao = function(entidade, id){
 $('btnConfirmarExclusao').addEventListener('click', async ()=>{
     const cfg = configs[entidadeAtual];
     try{
-        const res = await fetch(`${API_BASE}/api/${cfg.api}/${itemExcluir}`, {method:'DELETE'});
+        const res = await fetch(`${API_BASE}/api/${cfg.api}/${itemExcluir}`, { method: 'DELETE', headers: getAuthHeaders() });
         const json = await res.json();
         if(!res.ok) throw new Error(json.error||'Erro ao excluir');
         toast('Excluído!'); fecharModal('modalConfirmar'); carregar(entidadeAtual);

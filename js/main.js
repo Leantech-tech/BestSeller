@@ -245,12 +245,67 @@ function verProduto(id) {
     window.location.href = `produto.html?id=${id}`;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // If no company logged, redirect to login
-    if (!localStorage.getItem('araca_empresa_logada')) {
-        window.location.href = 'login.html';
-        return;
+function atualizarLogoEmpresa() {
+    try {
+        const usuario = localStorage.getItem('araca_admin_usuario');
+        if (usuario === 'suporte') return;
+        const raw = localStorage.getItem('araca_empresa_logada');
+        if (!raw) return;
+        const empresa = JSON.parse(raw);
+        if (!empresa) return;
+        const logoContainers = document.querySelectorAll('.logo-brand-text');
+        logoContainers.forEach(container => {
+            if (empresa.logo_url) {
+                container.innerHTML = `<img src="${empresa.logo_url}" alt="${empresa.nome_fantasia}" style="max-height:40px; max-width:140px; object-fit:contain; display:block;">`;
+            } else {
+                container.innerHTML = `<span class="logo-fallback-titulo">${empresa.nome_fantasia}</span>`;
+            }
+        });
+        if (empresa.cor_primaria) {
+            document.documentElement.style.setProperty('--cor-primaria', empresa.cor_primaria);
+        }
+        if (empresa.cor_secundaria) {
+            document.documentElement.style.setProperty('--cor-secundaria', empresa.cor_secundaria);
+        }
+    } catch (e) {
+        console.warn('Erro ao atualizar logo da empresa:', e);
     }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Tentar pegar o slug da URL
+    const path = window.location.pathname.replace(/^\//, '').replace(/\/.*/, '');
+    const isFile = path.includes('.') || path.startsWith('api') || path === 'login';
+    
+    if (path && !isFile) {
+        try {
+            const res = await fetch(`${API_BASE}/api/loja/empresa-por-slug/${path}`);
+            if (res.ok) {
+                const empresa = await res.json();
+                localStorage.setItem('araca_empresa_logada', JSON.stringify(empresa));
+                window.__companySlug = path;
+                atualizarLogoEmpresa();
+            }
+        } catch (e) {
+            console.error('Erro ao carregar empresa por slug:', e);
+        }
+    }
+    
+    // 2. Se ainda não tiver empresa salva, buscar a primeira empresa cadastrada no banco como fallback
+    if (!localStorage.getItem('araca_empresa_logada')) {
+        try {
+            const res = await fetch(`${API_BASE}/api/loja/empresa-por-slug/leantech`);
+            if (res.ok) {
+                const empresa = await res.json();
+                localStorage.setItem('araca_empresa_logada', JSON.stringify(empresa));
+                window.__companySlug = 'leantech';
+                atualizarLogoEmpresa();
+            }
+        } catch (e) {
+            console.warn('Erro ao carregar empresa padrão:', e);
+        }
+    }
+
     initCompanyFromSlug();
     initCarrossel();
     carregarDadosLoja();

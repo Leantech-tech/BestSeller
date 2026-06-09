@@ -96,7 +96,7 @@ async function fazerLogin(event) {
 function salvarEmpresaLogada(dados, usuarioEmail) {
     const empresa = {
         id: dados.empresa_id || dados.id || 1,
-        nome_fantasia: dados.nome_fantasia || dados.nome || 'TechShop',
+        nome_fantasia: dados.nome_fantasia || dados.nome || 'BestSeller',
         razao_social: dados.razao_social || '',
         logo_url: dados.logo_url || '',
         cor_primaria: dados.cor_primaria || '#1a6fc4',

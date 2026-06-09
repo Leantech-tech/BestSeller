@@ -219,7 +219,46 @@ function verProduto(id) {
     window.location.href = `produto.html?id=${id}`;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function atualizarLogoEmpresa() {
+    try {
+        const usuario = localStorage.getItem('araca_admin_usuario');
+        if (usuario === 'suporte') return;
+        const raw = localStorage.getItem('araca_empresa_logada');
+        if (!raw) return;
+        const empresa = JSON.parse(raw);
+        if (!empresa) return;
+        const logoContainers = document.querySelectorAll('.logo-brand-text');
+        logoContainers.forEach(container => {
+            if (empresa.logo_url) {
+                container.innerHTML = `<img src="${empresa.logo_url}" alt="${empresa.nome_fantasia}" style="max-height:40px; max-width:140px; object-fit:contain; display:block;">`;
+            } else {
+                container.innerHTML = `<span class="logo-fallback-titulo">${empresa.nome_fantasia}</span>`;
+            }
+        });
+        if (empresa.cor_primaria) {
+            document.documentElement.style.setProperty('--cor-primaria', empresa.cor_primaria);
+        }
+        if (empresa.cor_secundaria) {
+            document.documentElement.style.setProperty('--cor-secundaria', empresa.cor_secundaria);
+        }
+    } catch (e) {
+        console.warn('Erro ao atualizar logo da empresa:', e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    if (!localStorage.getItem('araca_empresa_logada')) {
+        try {
+            const res = await fetch(`${API_BASE}/api/loja/empresa-por-slug/leantech`);
+            if (res.ok) {
+                const empresa = await res.json();
+                localStorage.setItem('araca_empresa_logada', JSON.stringify(empresa));
+                atualizarLogoEmpresa();
+            }
+        } catch (e) {
+            console.warn('Erro ao carregar empresa padrão:', e);
+        }
+    }
     initCarrossel();
     carregarDadosLoja();
 });

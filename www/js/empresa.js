@@ -68,9 +68,9 @@
             container.style.display = 'none';
         });
 
-        // Ocultar logo da empresa no footer
-        const footerLogos = document.querySelectorAll('.footer-logo-container, .footer-logo-titulo, .footer-logo-sub');
-        footerLogos.forEach(el => {
+        // Ocultar subtítulo do logo no footer
+        const footerSubs = document.querySelectorAll('.footer-logo-sub');
+        footerSubs.forEach(el => {
             el.style.display = 'none';
         });
 

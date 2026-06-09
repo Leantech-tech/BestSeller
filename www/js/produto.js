@@ -30,7 +30,7 @@ async function carregarProduto() {
 
 function renderizarProduto(p) {
     try {
-        document.title = `${p.nome} - TechShop`;
+        document.title = `${p.nome} - BestSeller`;
 
         const preco = parseFloat(p.preco) || 0;
         const precoAntigo = parseFloat(p.preco_antigo) || 0;

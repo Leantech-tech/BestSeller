@@ -39,10 +39,31 @@ function gerarImagemProduto(nome, categoriaId) {
     return `https://picsum.photos/seed/${seed}/800/800`;
 }
 
+function getAuthHeaders() {
+    const h = {};
+    const isSuporte = localStorage.getItem('araca_admin_usuario') === 'suporte';
+    if (isSuporte) {
+        h['x-admin-perfil'] = 'suporte';
+    } else {
+        let empresaId = '1';
+        try {
+            const empresaRaw = localStorage.getItem('araca_empresa_logada');
+            if (empresaRaw) {
+                const empresa = JSON.parse(empresaRaw);
+                if (empresa && empresa.id) empresaId = String(empresa.id);
+            }
+        } catch (e) {
+            console.warn('[getAuthHeaders] Erro ao ler empresa do localStorage:', e.message);
+        }
+        h['x-empresa-id'] = empresaId;
+    }
+    return h;
+}
+
 // Carregar categorias no select
 async function carregarCategoriasSelect() {
     try {
-        const res = await fetch(`${API_BASE}/api/categorias`);
+        const res = await fetch(`${API_BASE}/api/categorias`, { headers: getAuthHeaders() });
         const cats = await res.json();
         const selectProd = $('prodCategoriaId');
         const selectFiltro = $('filtroCategoria');
@@ -51,6 +72,19 @@ async function carregarCategoriasSelect() {
         const filtroAtual = selectFiltro.value;
         selectFiltro.innerHTML = '<option value="">Todas as categorias</option>' + opts;
         selectFiltro.value = filtroAtual;
+    } catch (e) {}
+}
+
+// Carregar unidades de medida no select
+async function carregarUnidadesSelect() {
+    try {
+        const res = await fetch(`${API_BASE}/api/unidades-medida`, { headers: getAuthHeaders() });
+        const unidades = await res.json();
+        const select = $('prodUnidadeId');
+        const valAtual = select.value;
+        const opts = unidades.map(u => `<option value="${u.id}">${u.codigo} - ${u.descricao}</option>`).join('');
+        select.innerHTML = '<option value="">-- Selecione --</option>' + opts;
+        select.value = valAtual;
     } catch (e) {}
 }
 
@@ -147,7 +181,7 @@ function renderizarTabela() {
                 <td><strong>${p.nome}</strong></td>
                 <td>${p.categoria_nome || '-'}</td>
                 <td>${formatarMoeda(p.preco)}</td>
-                <td>${p.estoque ?? 0}</td>
+                <td>${parseFloat(p.estoque || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 3 })}</td>
                 <td>${p.ativo ? '<span class="badge badge-success">Ativo</span>' : '<span class="badge badge-danger">Inativo</span>'}</td>
                 ${isSuporte ? `<td>${p.empresa_nome || '-'}</td>` : ''}
                 <td>
@@ -191,6 +225,7 @@ $('btnNovoProduto').addEventListener('click', async () => {
     renderizarGaleriaImagens();
     $('modalProdutoTitulo').innerHTML = '<i class="fas fa-box"></i> Novo Produto';
     await carregarCategoriasSelect();
+    await carregarUnidadesSelect();
     Mascaras.aplicarTudo();
     abrirModal('modalProduto');
 });
@@ -279,12 +314,13 @@ window.editarProduto = async function(id) {
         $('prodNcm').value = p.ncm || '';
         $('prodPreco').value = p.preco || 0;
         $('prodPrecoAntigo').value = p.preco_antigo || '';
-        $('prodEstoque').value = p.estoque || 0;
+        $('prodEstoque').value = parseFloat(p.estoque || 0);
         $('prodDestaque').checked = p.destaque;
         $('prodLancamento').checked = p.lancamento;
         $('prodMaisVendido').checked = p.mais_vendido;
         $('prodAtivo').checked = p.ativo;
         await carregarCategoriasSelect();
+        await carregarUnidadesSelect();
         $('prodCategoriaId').value = p.categoria_id || '';
         $('prodUnidadeId').value = p.unidade_id || '';
         $('modalProdutoTitulo').innerHTML = '<i class="fas fa-edit"></i> Editar Produto';

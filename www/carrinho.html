@@ -4,18 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carrinho - TechShop</title>
+    <title>Carrinho - BestSeller</title>
     <link rel="icon" type="image/png" sizes="32x32" href="images/favion.jpg">
     <link rel="icon" type="image/png" sizes="192x192" href="images/favion.jpg">
     <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
     <link rel="stylesheet" href="css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/mobile.css">
-    <script>
-        if (!localStorage.getItem('araca_admin_logado')) {
-            window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.pathname.split('/').pop());
-        }
-    </script>
+
     <script src="js/api-interceptor.js"></script>
 </head>
 
@@ -28,7 +24,7 @@
             </button>
             <a href="index.html" class="logo">
                 <div class="logo-brand-text">
-                    <span class="logo-fallback-titulo">TechShop</span>
+                    <span class="logo-fallback-titulo">BestSeller</span>
                     <span class="logo-fallback-sub"></span>
                 </div>
             </a>
@@ -62,14 +58,21 @@
             <div class="admin-drawer-divider"></div>
             <li><a href="index.html"><i class="fas fa-store"></i> Loja</a></li>
         </ul>
-        <div class="admin-drawer-footer">© 2025 TechShop Admin</div>
+        <div class="admin-drawer-footer">© 2025 BestSeller Admin</div>
     </div>
 
     <script>
         (function(){
+            const logado = localStorage.getItem('araca_admin_logado') === 'true';
             const btn = document.getElementById('btnMenuHamburguer');
             const drawer = document.getElementById('adminDrawer');
             const overlay = document.getElementById('adminDrawerOverlay');
+            if (!logado) {
+                if (btn) btn.style.display = 'none';
+                if (drawer) drawer.style.display = 'none';
+                if (overlay) overlay.style.display = 'none';
+                return;
+            }
             const close = document.getElementById('adminDrawerClose');
             function abrir(){ drawer.classList.add('active'); overlay.classList.add('active'); }
             function fechar(){ drawer.classList.remove('active'); overlay.classList.remove('active'); }
@@ -107,11 +110,11 @@
         <div class="footer-container">
             <div class="footer-col">
                 <div class="footer-logo-container">
-                    <h2 class="footer-logo-titulo">TechShop</h2>
+                    <h2 class="footer-logo-titulo">BestSeller</h2>
                     <span class="footer-logo-sub"></span>
                 </div>
                 <div class="footer-info-empresa">
-                    <h4>TechShop E-commerce</h4>
+                    <h4>BestSeller E-commerce</h4>
                     <span class="footer-info-item"></span>
                     <span class="footer-info-item"></span>
                     <span class="footer-info-item"></span>
@@ -146,7 +149,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2025 TechShop. Todos os direitos reservados.</p>
+            <p>© 2025 BestSeller. Todos os direitos reservados.</p>
         </div>
     </footer>
 

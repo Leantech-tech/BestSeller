@@ -98,11 +98,13 @@ CREATE TABLE empresa_usuarios (
 -- ============================================================
 CREATE TABLE unidades_medida (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
-    codigo          TEXT NOT NULL UNIQUE,
+    empresa_id      INTEGER REFERENCES empresas(id) ON DELETE CASCADE,
+    codigo          TEXT NOT NULL,
     descricao       TEXT NOT NULL,
     permite_fracao  INTEGER DEFAULT 1,
     ativo           INTEGER DEFAULT 1,
-    created_at      TEXT DEFAULT CURRENT_TIMESTAMP
+    created_at      TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(empresa_id, codigo)
 );
 
 -- ============================================================

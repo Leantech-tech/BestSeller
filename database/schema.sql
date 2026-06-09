@@ -1,5 +1,5 @@
 -- ============================================================
--- TechShop - Schema SaaS (Multi-tenant)
+-- BestSeller - Schema SaaS (Multi-tenant)
 -- SGBD: PostgreSQL 14+
 -- Schema: public
 -- ============================================================
@@ -165,11 +165,13 @@ CREATE INDEX idx_empresa_usuarios_empresa ON empresa_usuarios(empresa_id);
 -- --------------------------------------------------------
 CREATE TABLE unidades_medida (
     id              SERIAL PRIMARY KEY,
-    codigo          VARCHAR(10) NOT NULL UNIQUE,    -- UN, KG, M, M2, M3, PC, CX, RL
+    empresa_id      INTEGER REFERENCES empresas(id) ON DELETE CASCADE,
+    codigo          VARCHAR(10) NOT NULL,
     descricao       VARCHAR(50) NOT NULL,
     permite_fracao  BOOLEAN DEFAULT TRUE,
     ativo           BOOLEAN DEFAULT TRUE,
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_unidades_medida_empresa_codigo UNIQUE (empresa_id, codigo)
 );
 
 -- --------------------------------------------------------
@@ -835,7 +837,7 @@ INSERT INTO empresas (
     cor_primaria, status, responsavel_nome, responsavel_email, responsavel_telefone
 ) VALUES (
     'araca-demo', 'Araca Materiais de Construcao e Logistica',
-    'TechShop', '05.750.359/0001-08',
+    'BestSeller', '05.750.359/0001-08',
     'contato@araca.com.br', '(12) 98899-7924',
     '11611-630', 'Rua Inácio de Carvalho', '17', 'Varadouro',
     'São Sebastião', 'SP',
@@ -850,17 +852,17 @@ BEGIN
     SELECT id INTO v_empresa_id FROM empresas WHERE slug = 'araca-demo';
 
     -- Unidades de medida (globais, sem empresa_id)
-    INSERT INTO unidades_medida (codigo, descricao, permite_fracao) VALUES
-    ('UN', 'Unidade', FALSE),
-    ('KG', 'Quilograma', TRUE),
-    ('M', 'Metro', TRUE),
-    ('M2', 'Metro Quadrado', TRUE),
-    ('M3', 'Metro Cúbico', TRUE),
-    ('PC', 'Peça', FALSE),
-    ('CX', 'Caixa', FALSE),
-    ('RL', 'Rolo', FALSE),
-    ('LT', 'Litro', TRUE),
-    ('PR', 'Par', FALSE),
+    INSERT INTO unidades_medida (empresa_id, codigo, descricao, permite_fracao) VALUES
+    (v_empresa_id, 'UN', 'Unidade', FALSE),
+    (v_empresa_id, 'KG', 'Quilograma', TRUE),
+    (v_empresa_id, 'M', 'Metro', TRUE),
+    (v_empresa_id, 'M2', 'Metro Quadrado', TRUE),
+    (v_empresa_id, 'M3', 'Metro Cúbico', TRUE),
+    (v_empresa_id, 'PC', 'Peça', FALSE),
+    (v_empresa_id, 'CX', 'Caixa', FALSE),
+    (v_empresa_id, 'RL', 'Rolo', FALSE),
+    (v_empresa_id, 'LT', 'Litro', TRUE),
+    (v_empresa_id, 'PR', 'Par', FALSE),
     ('DZ', 'Dúzia', FALSE),
     ('BD', 'Balde', FALSE),
     ('GL', 'Galão', FALSE);
