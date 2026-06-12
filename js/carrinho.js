@@ -209,6 +209,10 @@ function criarModalCheckout() {
                     <div id="checkout-formas-pagamento" class="checkout-formas-lista">
                         <p style="color:var(--cor-texto-muted);">Carregando...</p>
                     </div>
+                    <div id="checkout-parcelas-container" style="margin-top: 1.25rem; display: none;">
+                        <label for="checkout-parcelas" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--cor-texto);">Selecione o parcelamento:</label>
+                        <select id="checkout-parcelas" style="width: 100%; padding: 0.6rem; border: 1px solid var(--slate-300); border-radius: 8px; font-size: 0.95rem; background-color: white; color: var(--slate-800);"></select>
+                    </div>
                 </div>
             </div>
             <div class="modal-checkout-footer">
@@ -274,7 +278,7 @@ async function carregarFormasPagamento() {
         }
 
         container.innerHTML = ativas.map((f, idx) => `
-            <label class="checkout-forma-item ${idx === 0 ? 'selecionada' : ''}" data-id="${f.id}" data-descricao="${f.descricao}" onclick="selecionarFormaPagamento(this)">
+            <label class="checkout-forma-item ${idx === 0 ? 'selecionada' : ''}" data-id="${f.id}" data-descricao="${f.descricao}" data-parcelas-max="${f.parcelas_max || 1}" onclick="selecionarFormaPagamento(this)">
                 <input type="radio" name="forma_pagamento" value="${f.id}" ${idx === 0 ? 'checked' : ''}>
                 <span class="checkout-forma-icone">${iconePagamento(f.tipo)}</span>
                 <span class="checkout-forma-texto">${f.descricao}</span>
@@ -305,10 +309,32 @@ function selecionarFormaPagamento(el) {
     document.querySelectorAll('.checkout-forma-item').forEach(item => item.classList.remove('selecionada'));
     el.classList.add('selecionada');
     el.querySelector('input[type="radio"]').checked = true;
+
+    const parcelasMax = parseInt(el.dataset.parcelasMax) || 1;
     formaPagamentoSelecionada = {
         id: el.dataset.id,
-        descricao: el.dataset.descricao
+        descricao: el.dataset.descricao,
+        parcelasMax: parcelasMax
     };
+
+    const container = document.getElementById('checkout-parcelas-container');
+    const select = document.getElementById('checkout-parcelas');
+    if (container && select) {
+        if (parcelasMax > 1) {
+            let options = '';
+            const total = carrinho.getTotal();
+            for (let i = 1; i <= parcelasMax; i++) {
+                const valorParcela = total / i;
+                options += `<option value="${i}">${i}x de ${carrinho.formatarPreco(valorParcela)} sem juros</option>`;
+            }
+            select.innerHTML = options;
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+            select.innerHTML = '';
+        }
+    }
+
     const btn = document.getElementById('btnEnviarWhatsApp');
     if (btn) btn.disabled = false;
 }
@@ -321,6 +347,10 @@ async function enviarPedidoWhatsApp() {
         const resClientes = await fetch('/api/clientes');
         const clientes = await resClientes.json();
         const clienteId = clientes.length > 0 ? clientes[0].id : null;
+
+        // Obter parcelas selecionadas
+        const selectParcelas = document.getElementById('checkout-parcelas');
+        const parcelasEscolhidas = (formaPagamentoSelecionada.parcelasMax > 1 && selectParcelas) ? parseInt(selectParcelas.value) : 1;
 
         // Montar itens do pedido
         const itens = carrinho.itens.map(item => ({
@@ -338,6 +368,7 @@ async function enviarPedidoWhatsApp() {
             body: JSON.stringify({
                 cliente_id: clienteId,
                 forma_pagamento_id: formaPagamentoSelecionada.id,
+                parcelas: parcelasEscolhidas,
                 itens: itens
             })
         });
@@ -355,6 +386,13 @@ async function enviarPedidoWhatsApp() {
         });
         mensagem += `\n*Total:* ${carrinho.formatarPreco(carrinho.getTotal())}\n`;
         mensagem += `\n*Forma de Pagamento:* ${formaPagamentoSelecionada.descricao}\n`;
+
+        if (parcelasEscolhidas > 1) {
+            const valorParcela = carrinho.getTotal() / parcelasEscolhidas;
+            mensagem += `*Parcelamento:* ${parcelasEscolhidas}x de ${carrinho.formatarPreco(valorParcela)} sem juros\n`;
+        } else {
+            mensagem += `*Parcelamento:* À vista (1x)\n`;
+        }
 
         const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`;
         window.open(url, '_blank');

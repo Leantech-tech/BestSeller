@@ -28,9 +28,9 @@ let produtosData = [];
 let filtrosCarrossel = (function() {
     try {
         const saved = localStorage.getItem('araca_filtros_carrossel');
-        return saved ? new Set(JSON.parse(saved)) : new Set();
+        return saved ? new Set(JSON.parse(saved)) : new Set(['destaque', 'lancamento', 'mais_vendido']);
     } catch (e) {
-        return new Set();
+        return new Set(['destaque', 'lancamento', 'mais_vendido']);
     }
 })();
 let slidesAtuais = [];

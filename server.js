@@ -1382,7 +1382,7 @@ app.put('/api/pedidos/:id/status', async (req, res) => {
 app.post('/api/pedidos', async (req, res) => {
     try {
         const empresaId = getEmpresaId(req);
-        const { cliente_id, forma_pagamento_id, obs, itens } = req.body;
+        const { cliente_id, forma_pagamento_id, obs, itens, parcelas } = req.body;
         if (!itens || !Array.isArray(itens) || itens.length === 0) {
             return res.status(400).json({ error: 'Carrinho vazio' });
         }
@@ -1417,9 +1417,9 @@ app.post('/api/pedidos', async (req, res) => {
         const subtotal = itens.reduce((s, item) => s + (item.quantidade * item.preco_unitario), 0);
         const total = subtotal;
         const rPedido = await query(
-            `INSERT INTO pedidos (empresa_id, numero, cliente_id, endereco_id, forma_pagamento_id, status, obs_cliente, subtotal_produtos, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *`,
-            [empresaId, numero, clienteId, enderecoId, forma_pagamento_id || null, 'pendente', obs || null, subtotal]
+            `INSERT INTO pedidos (empresa_id, numero, cliente_id, endereco_id, forma_pagamento_id, parcelas, status, obs_cliente, subtotal_produtos, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING *`,
+            [empresaId, numero, clienteId, enderecoId, forma_pagamento_id || null, parcelas || 1, 'pendente', obs || null, subtotal]
         );
         const pedido = rPedido.rows[0];
         for (let i = 0; i < itens.length; i++) {
